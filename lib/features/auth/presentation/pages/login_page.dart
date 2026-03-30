@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../../../home/presentation/pages/home_page.dart';
 import '../widgets/auth_text_field.dart';
 
 class LoginPage extends StatelessWidget {
@@ -79,7 +80,7 @@ class LoginPage extends StatelessWidget {
                                 SizedBox(
                                   height: 74 * widthScale,
                                   child: Image.asset(
-                                    'src/img/logo.jpg',
+                                    'src/img/logo.png',
                                     fit: BoxFit.contain,
                                   ),
                                 ),
@@ -112,7 +113,13 @@ class LoginPage extends StatelessWidget {
                                 SizedBox(
                                   height: 52 * widthScale,
                                   child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => const HomePage(),
+                                        ),
+                                      );
+                                    },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFFFF6B00),
                                       foregroundColor: Colors.white,
