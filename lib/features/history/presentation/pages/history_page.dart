@@ -93,6 +93,39 @@ class _HistoryPageState extends State<HistoryPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        height: 34 * scale,
+                        child: Image.asset('src/img/logo.png', fit: BoxFit.contain),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 40 * scale,
+                        height: 40 * scale,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          Icons.notifications_none_rounded,
+                          color: Colors.white,
+                          size: 22 * scale,
+                        ),
+                      ),
+                      SizedBox(width: 10 * scale),
+                      CircleAvatar(
+                        radius: 20 * scale,
+                        backgroundColor: const Color(0xFFFFA95B),
+                        child: Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 24 * scale,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 18 * scale),
                   Text(
                     'Historico de Rotas',
                     style: TextStyle(
