@@ -1,20 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../../data/auth_service.dart';
 import '../../../home/presentation/pages/home_page.dart';
+import '../../../../shared/widgets/theme_mode_button.dart';
+import 'register_page.dart';
 import '../widgets/auth_text_field.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Preencha e-mail e senha.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final result = await _authService.login(email: email, password: password);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (!result.ok) {
+      _showMessage(result.message ?? 'Falha no login.');
+      return;
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const HomePage()),
+    );
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final widthScale = (size.width / 393).clamp(0.86, 1.15).toDouble();
     final horizontalPadding = (size.width * 0.06).clamp(16.0, 30.0).toDouble();
+    final headerGradient = isDark
+        ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
+        : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -31,23 +83,24 @@ class LoginPage extends StatelessWidget {
                         horizontalPadding,
                         86 * widthScale,
                       ),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            Color(0xFFFF8A00),
-                            Color(0xFFFF6A00),
-                            Color(0xFFD84A05),
-                          ],
-                          stops: [0.05, 0.55, 1],
+                          colors: headerGradient,
+                          stops: const [0.05, 0.55, 1],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.only(
+                        borderRadius: const BorderRadius.only(
                           bottomLeft: Radius.circular(28),
                           bottomRight: Radius.circular(28),
                         ),
                       ),
-                      child: SizedBox(height: 12 * widthScale),
+                      child: Row(
+                        children: [
+                          const Spacer(),
+                          ThemeModeButton(scale: widthScale),
+                        ],
+                      ),
                     ),
                     Transform.translate(
                       offset: Offset(0, -42 * widthScale),
@@ -64,7 +117,7 @@ class LoginPage extends StatelessWidget {
                               24 * widthScale,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
@@ -80,7 +133,7 @@ class LoginPage extends StatelessWidget {
                                 SizedBox(
                                   height: 74 * widthScale,
                                   child: Image.asset(
-                                    'src/img/logo.jpg',
+                                    isDark ? 'src/img/logo.png' : 'src/img/logo.jpg',
                                     fit: BoxFit.contain,
                                   ),
                                 ),
@@ -91,14 +144,16 @@ class LoginPage extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 18 * widthScale,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF2C2C2C),
+                                    color: isDark ? Colors.white : const Color(0xFF2C2C2C),
                                   ),
                                 ),
                                 SizedBox(height: 16 * widthScale),
                                 AuthTextField(
-                                  label: 'E-mail',
-                                  hint: '[Seu e-mail]',
+                                  label: 'E-mail ou usuario',
+                                  hint: '[Seu e-mail ou usuario]',
                                   icon: Icons.mail_outline,
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
                                   scale: widthScale,
                                 ),
                                 SizedBox(height: 16 * widthScale),
@@ -106,6 +161,7 @@ class LoginPage extends StatelessWidget {
                                   label: 'Senha',
                                   hint: '........',
                                   icon: Icons.lock_outline_rounded,
+                                  controller: _passwordController,
                                   obscureText: true,
                                   scale: widthScale,
                                 ),
@@ -113,15 +169,11 @@ class LoginPage extends StatelessWidget {
                                 SizedBox(
                                   height: 52 * widthScale,
                                   child: ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pushReplacement(
-                                        MaterialPageRoute<void>(
-                                          builder: (_) => const HomePage(),
-                                        ),
-                                      );
-                                    },
+                                    onPressed: _isLoading ? null : _submitLogin,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFFF6B00),
+                                      backgroundColor: isDark
+                                          ? const Color(0xFF8B4DDE)
+                                          : const Color(0xFFFF6B00),
                                       foregroundColor: Colors.white,
                                       elevation: 4,
                                       textStyle: TextStyle(
@@ -132,7 +184,16 @@ class LoginPage extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(14),
                                       ),
                                     ),
-                                    child: const Text('ENTRAR'),
+                                    child: _isLoading
+                                        ? SizedBox(
+                                            width: 20 * widthScale,
+                                            height: 20 * widthScale,
+                                            child: const CircularProgressIndicator(
+                                              strokeWidth: 2.2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text('ENTRAR'),
                                   ),
                                 ),
                                 SizedBox(height: 14 * widthScale),
@@ -141,7 +202,7 @@ class LoginPage extends StatelessWidget {
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
                                     fontSize: 16 * widthScale,
-                                    color: const Color(0xFF1F1F1F),
+                                    color: isDark ? const Color(0xFFD5DAEA) : const Color(0xFF1F1F1F),
                                   ),
                                 ),
                                 SizedBox(height: 16 * widthScale),
@@ -154,7 +215,7 @@ class LoginPage extends StatelessWidget {
                                         'Ou entre com',
                                         style: TextStyle(
                                           fontSize: 15 * widthScale,
-                                          color: const Color(0xFF363636),
+                                          color: isDark ? const Color(0xFFC8CEDF) : const Color(0xFF363636),
                                         ),
                                       ),
                                     ),
@@ -204,15 +265,29 @@ class LoginPage extends StatelessWidget {
                                     text: TextSpan(
                                       style: TextStyle(
                                         fontSize: 16 * widthScale,
-                                        color: const Color(0xFF242424),
+                                        color: isDark ? const Color(0xFFE0E5F4) : const Color(0xFF242424),
                                       ),
-                                      children: const [
-                                        TextSpan(text: 'Nao tem uma conta? '),
-                                        TextSpan(
-                                          text: 'Cadastre-se',
-                                          style: TextStyle(
-                                            color: Color(0xFFE86710),
-                                            fontWeight: FontWeight.w600,
+                                      children: [
+                                        const TextSpan(text: 'Nao tem uma conta? '),
+                                        WidgetSpan(
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute<void>(
+                                                  builder: (_) => const RegisterPage(),
+                                                ),
+                                              );
+                                            },
+                                            child: Text(
+                                              'Cadastre-se',
+                                              style: TextStyle(
+                                                color: isDark
+                                                    ? const Color(0xFFB06CFF)
+                                                    : const Color(0xFFE86710),
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16 * widthScale,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],

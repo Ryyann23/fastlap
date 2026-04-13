@@ -18,12 +18,16 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: 154 * scale,
       padding: EdgeInsets.all(12 * scale),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF8C22), Color(0xFFFF6B00)],
+        gradient: LinearGradient(
+          colors: isDark
+              ? const [Color(0xFF8B4DDE), Color(0xFFB06CFF)]
+              : const [Color(0xFFFF8C22), Color(0xFFFF6B00)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

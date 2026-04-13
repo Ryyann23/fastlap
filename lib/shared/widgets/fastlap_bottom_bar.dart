@@ -16,14 +16,16 @@ class FastlapBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0D0F14) : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Color(0x22000000),
+            color: isDark ? const Color(0x33000000) : const Color(0x22000000),
             blurRadius: 10,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
@@ -94,8 +96,9 @@ class _BottomItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const activeColor = Color(0xFFE86710);
-    const inactiveColor = Color(0xFF3F3F3F);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? const Color(0xFFB06CFF) : const Color(0xFFE86710);
+    final inactiveColor = isDark ? const Color(0xFFC8CCD8) : const Color(0xFF3F3F3F);
 
     return InkWell(
       onTap: onTap,

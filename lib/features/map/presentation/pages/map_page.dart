@@ -11,6 +11,8 @@ import '../../../home/presentation/pages/home_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../routes/presentation/pages/routes_page.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
+import '../../../../shared/widgets/theme_mode_button.dart';
+import '../../../../shared/widgets/user_header_avatar.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -102,15 +104,19 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
     final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
     final dateText = _formatBrasiliaDate();
+    final headerGradient = isDark
+      ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
+      : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
     final mapCenter = _userLocation ?? _fallbackCenter;
     final stops = _routePoints.isEmpty ? _buildRoutePoints(mapCenter) : _routePoints;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           Container(
@@ -121,18 +127,14 @@ class _MapPageState extends State<MapPage> {
               horizontalPadding,
               16 * scale,
             ),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFF8A00),
-                  Color(0xFFFF6A00),
-                  Color(0xFFD84A05),
-                ],
-                stops: [0.05, 0.55, 1],
+                colors: headerGradient,
+                stops: const [0.05, 0.55, 1],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(26),
                 bottomRight: Radius.circular(26),
               ),
@@ -149,29 +151,9 @@ class _MapPageState extends State<MapPage> {
                         child: Image.asset('src/img/logo.png', fit: BoxFit.contain),
                       ),
                       const Spacer(),
-                      Container(
-                        width: 40 * scale,
-                        height: 40 * scale,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Icon(
-                          Icons.notifications_none_rounded,
-                          color: Colors.white,
-                          size: 22 * scale,
-                        ),
-                      ),
+                      ThemeModeButton(scale: scale),
                       SizedBox(width: 10 * scale),
-                      CircleAvatar(
-                        radius: 20 * scale,
-                        backgroundColor: const Color(0xFFFFA95B),
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 24 * scale,
-                        ),
-                      ),
+                      UserHeaderAvatar(radius: 20 * scale),
                     ],
                   ),
                   SizedBox(height: 18 * scale),
@@ -214,7 +196,7 @@ class _MapPageState extends State<MapPage> {
                       polylines: [
                         Polyline(
                           points: stops,
-                          color: const Color(0xFFDB7B2C),
+                          color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFDB7B2C),
                           strokeWidth: 6,
                         ),
                       ],
@@ -235,7 +217,7 @@ class _MapPageState extends State<MapPage> {
                             point: _userLocation!,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: const Color(0xFF2D87FF),
+                                color: isDark ? const Color(0xFFB06CFF) : const Color(0xFF2D87FF),
                                 borderRadius: BorderRadius.circular(11),
                                 border: Border.all(color: Colors.white, width: 3),
                                 boxShadow: [
@@ -254,9 +236,9 @@ class _MapPageState extends State<MapPage> {
                             point: stops[_activeStepIndex],
                             child: Column(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.local_shipping_rounded,
-                                  color: Color(0xFFE36F15),
+                                  color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE36F15),
                                   size: 22,
                                 ),
                                 const SizedBox(height: 2),
@@ -264,7 +246,7 @@ class _MapPageState extends State<MapPage> {
                                   width: 6,
                                   height: 6,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFE36F15),
+                                    color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE36F15),
                                     borderRadius: BorderRadius.circular(3),
                                   ),
                                 ),
@@ -282,7 +264,9 @@ class _MapPageState extends State<MapPage> {
                   child: Container(
                     padding: EdgeInsets.all(8 * scale),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.96),
+                      color: isDark
+                          ? const Color(0xFF1A1D2A).withValues(alpha: 0.96)
+                          : Colors.white.withValues(alpha: 0.96),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
@@ -298,9 +282,11 @@ class _MapPageState extends State<MapPage> {
                           height: 48 * scale,
                           padding: EdgeInsets.symmetric(horizontal: 14 * scale),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: isDark ? const Color(0xFF111421) : Colors.white,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFFD8D8D8)),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF31364A) : const Color(0xFFD8D8D8),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -309,7 +295,7 @@ class _MapPageState extends State<MapPage> {
                               Text(
                                 'Buscar endereco ou parada...',
                                 style: TextStyle(
-                                  color: const Color(0xFF858585),
+                                  color: isDark ? Colors.white70 : const Color(0xFF858585),
                                   fontSize: 16 * scale,
                                 ),
                               ),
@@ -391,9 +377,11 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _stopMarker(String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFE67A23),
+        color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
         borderRadius: BorderRadius.circular(17),
         boxShadow: [
           BoxShadow(
@@ -415,10 +403,14 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _bottomRouteCard(double scale) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: EdgeInsets.fromLTRB(14 * scale, 12 * scale, 14 * scale, 0),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.97),
+        color: isDark
+            ? const Color(0xFF1A1D2A).withValues(alpha: 0.97)
+            : Colors.white.withValues(alpha: 0.97),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -439,7 +431,7 @@ class _MapPageState extends State<MapPage> {
                   style: TextStyle(
                     fontSize: 18 * scale,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A1A),
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                   ),
                 ),
               ),
@@ -481,7 +473,7 @@ class _MapPageState extends State<MapPage> {
             child: Text(
               'Est. 12:45 | 10.1 km restantes',
               style: TextStyle(
-                color: const Color(0xFF2A2A2A),
+                color: isDark ? Colors.white : const Color(0xFF2A2A2A),
                 fontSize: 15 * scale,
               ),
             ),
@@ -508,15 +500,21 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _actionRow(IconData icon, String label, double scale) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, color: const Color(0xFFC7742A), size: 21 * scale),
+        Icon(
+          icon,
+          color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFC7742A),
+          size: 21 * scale,
+        ),
         SizedBox(width: 6 * scale),
         Text(
           label,
           style: TextStyle(
-            color: const Color(0xFF2A2A2A),
+            color: isDark ? Colors.white : const Color(0xFF2A2A2A),
             fontSize: 16 * scale,
             fontWeight: FontWeight.w500,
           ),
@@ -526,12 +524,16 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _dotStep(String label, bool active, double scale, {bool showTruck = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: 30 * scale,
       height: 30 * scale,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: active ? const Color(0xFFE67A23) : const Color(0xFFCBCBCB),
+        color: active
+            ? (isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23))
+            : const Color(0xFFCBCBCB),
         borderRadius: BorderRadius.circular(15),
       ),
       child: showTruck
@@ -543,7 +545,9 @@ class _MapPageState extends State<MapPage> {
           : Text(
               label,
               style: TextStyle(
-                color: active ? Colors.white : const Color(0xFF676767),
+                color: active
+                    ? Colors.white
+                    : (isDark ? const Color(0xFFCED3E6) : const Color(0xFF676767)),
                 fontWeight: FontWeight.w700,
                 fontSize: 14 * scale,
               ),
@@ -557,7 +561,11 @@ class _MapPageState extends State<MapPage> {
         height: 4,
         margin: const EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFE67A23) : const Color(0xFFD8D8D8),
+          color: active
+              ? (Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFFB06CFF)
+                    : const Color(0xFFE67A23))
+              : const Color(0xFFD8D8D8),
           borderRadius: BorderRadius.circular(8),
         ),
       ),
@@ -580,6 +588,8 @@ class _MapTabChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -590,20 +600,22 @@ class _MapTabChip extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             gradient: selected
-                ? const LinearGradient(
-                    colors: [Color(0xFFFF8C22), Color(0xFFFF6B00)],
+                ? LinearGradient(
+                    colors: isDark
+                        ? const [Color(0xFF8B4DDE), Color(0xFFB06CFF)]
+                        : const [Color(0xFFFF8C22), Color(0xFFFF6B00)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : null,
-            color: selected ? null : Colors.transparent,
+            color: selected ? null : (isDark ? const Color(0xFF111421) : Colors.transparent),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 15 * scale,
-              color: selected ? Colors.white : const Color(0xFF2A2A2A),
+              color: selected ? Colors.white : (isDark ? Colors.white : const Color(0xFF2A2A2A)),
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             ),
           ),

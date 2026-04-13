@@ -2,6 +2,10 @@
 
 Aplicativo Flutter para organizacao e otimizacao de rotas de delivery.
 
+Agora o app possui:
+- alternancia global de tema claro/escuro (padrao: claro)
+- autenticacao local com login e cadastro salvos no dispositivo
+
 ## Estrutura
 
 - lib/app: configuracao principal do app
@@ -15,6 +19,11 @@ Aplicativo Flutter para organizacao e otimizacao de rotas de delivery.
 
    flutter pub get
    flutter run
+
+## Autenticacao Local
+
+Cadastro e login funcionam sem internet e sem backend.
+Os dados de usuario (nome, nome de usuario, e-mail e senha) sao armazenados localmente no dispositivo.
 
 ## Observacao
 

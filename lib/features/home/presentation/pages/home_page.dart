@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../auth/data/auth_service.dart';
 import '../../../history/presentation/pages/history_page.dart';
 import '../../../map/presentation/pages/map_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../routes/presentation/pages/routes_page.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
+import '../../../../shared/widgets/theme_mode_button.dart';
+import '../../../../shared/widgets/user_header_avatar.dart';
 import '../widgets/quick_action_card.dart';
 import '../widgets/summary_card.dart';
 
@@ -23,13 +26,18 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userFuture = AuthService().getActiveUser();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
     final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
     final dateTimeText = _formatBrasiliaNow();
+    final headerGradient = isDark
+        ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
+        : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           Container(
@@ -40,18 +48,14 @@ class HomePage extends StatelessWidget {
               horizontalPadding,
               22 * scale,
             ),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFF8A00),
-                  Color(0xFFFF6A00),
-                  Color(0xFFD84A05),
-                ],
-                stops: [0.05, 0.55, 1],
+                colors: headerGradient,
+                stops: const [0.05, 0.55, 1],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(26),
                 bottomRight: Radius.circular(26),
               ),
@@ -68,39 +72,29 @@ class HomePage extends StatelessWidget {
                         child: Image.asset('src/img/logo.png', fit: BoxFit.contain),
                       ),
                       const Spacer(),
-                      Container(
-                        width: 40 * scale,
-                        height: 40 * scale,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Icon(
-                          Icons.notifications_none_rounded,
-                          color: Colors.white,
-                          size: 22 * scale,
-                        ),
-                      ),
+                      ThemeModeButton(scale: scale),
                       SizedBox(width: 10 * scale),
-                      CircleAvatar(
-                        radius: 20 * scale,
-                        backgroundColor: const Color(0xFFFFA95B),
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 24 * scale,
-                        ),
-                      ),
+                      UserHeaderAvatar(radius: 20 * scale),
                     ],
                   ),
                   SizedBox(height: 22 * scale),
-                  Text(
-                    'Bem vindo, USUARIO',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 28 * scale,
-                    ),
+                  FutureBuilder<LocalAuthUser?>(
+                    future: userFuture,
+                    builder: (context, snapshot) {
+                      final name = snapshot.data?.name.trim();
+                      final welcomeName = (name == null || name.isEmpty)
+                          ? 'USUARIO'
+                          : name.toUpperCase();
+
+                      return Text(
+                        'Bem vindo, $welcomeName',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 28 * scale,
+                        ),
+                      );
+                    },
                   ),
                   SizedBox(height: 4 * scale),
                   Text(
@@ -129,7 +123,7 @@ class HomePage extends StatelessWidget {
                   Text(
                     'Resumo do Dia',
                     style: TextStyle(
-                      color: const Color(0xFF111111),
+                      color: isDark ? Colors.white : const Color(0xFF111111),
                       fontWeight: FontWeight.w700,
                       fontSize: 34 * scale,
                     ),
@@ -172,8 +166,10 @@ class HomePage extends StatelessWidget {
                     height: 62 * scale,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(32),
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF7A3D), Color(0xFFFF8A00)],
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? const [Color(0xFF8B4DDE), Color(0xFFB06CFF)]
+                            : const [Color(0xFFFF7A3D), Color(0xFFFF8A00)],
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                       ),
@@ -219,7 +215,7 @@ class HomePage extends StatelessWidget {
                   Text(
                     'Acesso Rapido',
                     style: TextStyle(
-                      color: const Color(0xFF111111),
+                      color: isDark ? Colors.white : const Color(0xFF111111),
                       fontWeight: FontWeight.w700,
                       fontSize: 34 * scale,
                     ),

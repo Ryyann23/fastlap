@@ -6,6 +6,8 @@ import '../../../map/presentation/pages/map_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../routes/presentation/pages/routes_page.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
+import '../../../../shared/widgets/theme_mode_button.dart';
+import '../../../../shared/widgets/user_header_avatar.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -50,10 +52,14 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
     final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
     final dateHeader = _formatBrasiliaDateHeader();
+    final headerGradient = isDark
+      ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
+      : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
 
     final allItems = _buildItems();
     final filteredItems = _selectedDate == null
@@ -61,7 +67,7 @@ class _HistoryPageState extends State<HistoryPage> {
         : allItems.where((item) => _sameDate(item.date, _selectedDate!)).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           Container(
@@ -72,18 +78,14 @@ class _HistoryPageState extends State<HistoryPage> {
               horizontalPadding,
               16 * scale,
             ),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFF8A00),
-                  Color(0xFFFF6A00),
-                  Color(0xFFD84A05),
-                ],
-                stops: [0.05, 0.55, 1],
+                colors: headerGradient,
+                stops: const [0.05, 0.55, 1],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(26),
                 bottomRight: Radius.circular(26),
               ),
@@ -100,29 +102,9 @@ class _HistoryPageState extends State<HistoryPage> {
                         child: Image.asset('src/img/logo.png', fit: BoxFit.contain),
                       ),
                       const Spacer(),
-                      Container(
-                        width: 40 * scale,
-                        height: 40 * scale,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Icon(
-                          Icons.notifications_none_rounded,
-                          color: Colors.white,
-                          size: 22 * scale,
-                        ),
-                      ),
+                      ThemeModeButton(scale: scale),
                       SizedBox(width: 10 * scale),
-                      CircleAvatar(
-                        radius: 20 * scale,
-                        backgroundColor: const Color(0xFFFFA95B),
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 24 * scale,
-                        ),
-                      ),
+                      UserHeaderAvatar(radius: 20 * scale),
                     ],
                   ),
                   SizedBox(height: 18 * scale),
@@ -165,7 +147,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         margin: EdgeInsets.only(bottom: 12 * scale),
                         padding: EdgeInsets.all(14 * scale),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
@@ -186,7 +168,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                     style: TextStyle(
                                       fontSize: 17 * scale,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF141414),
+                                      color: isDark ? Colors.white : const Color(0xFF141414),
                                     ),
                                   ),
                                   SizedBox(height: 3 * scale),
@@ -194,7 +176,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                     'Data: ${_formatItemDate(item.date)}',
                                     style: TextStyle(
                                       fontSize: 15 * scale,
-                                      color: const Color(0xFF232323),
+                                      color: isDark ? Colors.white : const Color(0xFF232323),
                                     ),
                                   ),
                                   SizedBox(height: 2 * scale),
@@ -202,7 +184,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                     'Status: ${item.status}',
                                     style: TextStyle(
                                       fontSize: 15 * scale,
-                                      color: const Color(0xFF232323),
+                                      color: isDark ? Colors.white : const Color(0xFF232323),
                                     ),
                                   ),
                                 ],
@@ -214,7 +196,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                 Icon(
                                   Icons.outlined_flag_rounded,
                                   size: 28 * scale,
-                                  color: const Color(0xFF1D1D1D),
+                                  color: isDark ? Colors.white : const Color(0xFF1D1D1D),
                                 ),
                                 SizedBox(height: 22 * scale),
                                 Icon(
@@ -247,7 +229,9 @@ class _HistoryPageState extends State<HistoryPage> {
                             });
                           },
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFB88649)),
+                            side: BorderSide(
+                              color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFB88649),
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -256,7 +240,7 @@ class _HistoryPageState extends State<HistoryPage> {
                           child: Text(
                             'Ver Tudo',
                             style: TextStyle(
-                              color: const Color(0xFF9B6E35),
+                              color: isDark ? Colors.white : const Color(0xFF9B6E35),
                               fontSize: 16 * scale,
                             ),
                           ),
@@ -282,7 +266,9 @@ class _HistoryPageState extends State<HistoryPage> {
                             }
                           },
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFB88649)),
+                            side: BorderSide(
+                              color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFB88649),
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -290,13 +276,13 @@ class _HistoryPageState extends State<HistoryPage> {
                           ),
                           icon: Icon(
                             Icons.filter_alt_outlined,
-                            color: const Color(0xFF9B6E35),
+                            color: isDark ? Colors.white : const Color(0xFF9B6E35),
                             size: 20 * scale,
                           ),
                           label: Text(
                             'Filtrar por Data',
                             style: TextStyle(
-                              color: const Color(0xFF9B6E35),
+                              color: isDark ? Colors.white : const Color(0xFF9B6E35),
                               fontSize: 16 * scale,
                             ),
                           ),
