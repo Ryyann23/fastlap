@@ -23,7 +23,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
-  final LatLng _fallbackCenter = const LatLng(-23.5505, -46.6333);
+  final LatLng _fallbackCenter = const LatLng(-4.8645, -43.3573);
 
   List<LatLng> _routePoints = const [];
   LatLng? _userLocation;
@@ -61,7 +61,7 @@ class _MapPageState extends State<MapPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _mapController.move(center, 13.8);
+      _mapController.move(center, 18.5);
     });
   }
 
@@ -185,7 +185,7 @@ class _MapPageState extends State<MapPage> {
                   mapController: _mapController,
                   options: MapOptions(
                     initialCenter: mapCenter,
-                    initialZoom: 13.8,
+                    initialZoom: 18.5,
                   ),
                   children: [
                     TileLayer(
