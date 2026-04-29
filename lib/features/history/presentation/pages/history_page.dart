@@ -5,6 +5,8 @@ import '../../../home/presentation/pages/home_page.dart';
 import '../../../map/presentation/pages/map_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../routes/presentation/pages/routes_page.dart';
+import '../../../../shared/data/route_model.dart';
+import '../../../../shared/data/route_service.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../../../../shared/widgets/user_header_avatar.dart';
@@ -19,24 +21,26 @@ class HistoryPage extends StatefulWidget {
 class _HistoryPageState extends State<HistoryPage> {
   DateTime? _selectedDate;
 
-  List<_HistoryRouteItem> _buildItems() {
-    final now = DateTime.now().toUtc().add(const Duration(hours: -3));
-    final today = DateTime(now.year, now.month, now.day);
+  @override
+  void initState() {
+    super.initState();
+    RouteService.instance.addListener(_onRoutesChanged);
+  }
 
-    return [
-      _HistoryRouteItem('Rota #12 - Zona Sul', today, 'Concluido'),
-      _HistoryRouteItem('Rota #11 - Centro', today.subtract(const Duration(days: 1)), 'Concluido'),
-      _HistoryRouteItem('Rota #10 - Praia', today.subtract(const Duration(days: 2)), 'Concluido'),
-      _HistoryRouteItem('Rota #09 - Norte', today.subtract(const Duration(days: 3)), 'Concluido'),
-      _HistoryRouteItem('Rota #08 - Leste', today.subtract(const Duration(days: 5)), 'Concluido'),
-    ];
+  @override
+  void dispose() {
+    RouteService.instance.removeListener(_onRoutesChanged);
+    super.dispose();
+  }
+
+  void _onRoutesChanged() {
+    if (mounted) setState(() {});
   }
 
   String _formatBrasiliaDateHeader() {
     final brasiliaNow = DateTime.now().toUtc().add(const Duration(hours: -3));
     final raw = DateFormat("EEE, d 'de' MMMM", 'pt_BR').format(brasiliaNow);
     if (raw.isEmpty) return '';
-
     final withoutDot = raw.replaceAll('.', '');
     return withoutDot[0].toUpperCase() + withoutDot.substring(1);
   }
@@ -50,6 +54,15 @@ class _HistoryPageState extends State<HistoryPage> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  List<AppRoute> _filteredHistory() {
+    final completed = RouteService.instance.completedRoutes;
+    if (_selectedDate == null) return completed;
+    return completed.where((r) {
+      final date = r.completedAt ?? r.createdAt;
+      return _sameDate(date, _selectedDate!);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -58,13 +71,10 @@ class _HistoryPageState extends State<HistoryPage> {
     final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
     final dateHeader = _formatBrasiliaDateHeader();
     final headerGradient = isDark
-      ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
-      : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
+        ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
+        : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
 
-    final allItems = _buildItems();
-    final filteredItems = _selectedDate == null
-        ? allItems
-        : allItems.where((item) => _sameDate(item.date, _selectedDate!)).toList();
+    final historyItems = _filteredHistory();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -109,11 +119,11 @@ class _HistoryPageState extends State<HistoryPage> {
                   ),
                   SizedBox(height: 18 * scale),
                   Text(
-                    'Historico de Rotas',
+                    'Histórico de Rotas',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
-                      fontSize: 42 * scale,
+                      fontSize: 36 * scale,
                     ),
                   ),
                   SizedBox(height: 4 * scale),
@@ -133,84 +143,48 @@ class _HistoryPageState extends State<HistoryPage> {
             child: Column(
               children: [
                 Expanded(
-                  child: ListView.builder(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      14 * scale,
-                      horizontalPadding,
-                      8 * scale,
-                    ),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 12 * scale),
-                        padding: EdgeInsets.all(14 * scale),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.title,
-                                    style: TextStyle(
-                                      fontSize: 17 * scale,
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark ? Colors.white : const Color(0xFF141414),
-                                    ),
-                                  ),
-                                  SizedBox(height: 3 * scale),
-                                  Text(
-                                    'Data: ${_formatItemDate(item.date)}',
-                                    style: TextStyle(
-                                      fontSize: 15 * scale,
-                                      color: isDark ? Colors.white : const Color(0xFF232323),
-                                    ),
-                                  ),
-                                  SizedBox(height: 2 * scale),
-                                  Text(
-                                    'Status: ${item.status}',
-                                    style: TextStyle(
-                                      fontSize: 15 * scale,
-                                      color: isDark ? Colors.white : const Color(0xFF232323),
-                                    ),
-                                  ),
-                                ],
+                  child: historyItems.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.history,
+                                size: 64 * scale,
+                                color: isDark ? Colors.white24 : const Color(0xFFCCCCCC),
                               ),
-                            ),
-                            SizedBox(width: 8 * scale),
-                            Column(
-                              children: [
-                                Icon(
-                                  Icons.outlined_flag_rounded,
-                                  size: 28 * scale,
-                                  color: isDark ? Colors.white : const Color(0xFF1D1D1D),
+                              SizedBox(height: 12 * scale),
+                              Text(
+                                'Nenhuma rota no histórico',
+                                style: TextStyle(
+                                  fontSize: 17 * scale,
+                                  color: isDark ? Colors.white38 : const Color(0xFF999999),
                                 ),
-                                SizedBox(height: 22 * scale),
-                                Icon(
-                                  Icons.check_circle_outline_rounded,
-                                  size: 30 * scale,
-                                  color: const Color(0xFF5C8C61),
+                              ),
+                              SizedBox(height: 6 * scale),
+                              Text(
+                                'Rotas concluídas ou canceladas aparecerão aqui',
+                                style: TextStyle(
+                                  fontSize: 14 * scale,
+                                  color: isDark ? Colors.white24 : const Color(0xFFBBBBBB),
                                 ),
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontalPadding,
+                            14 * scale,
+                            horizontalPadding,
+                            8 * scale,
+                          ),
+                          itemCount: historyItems.length,
+                          itemBuilder: (context, index) {
+                            final route = historyItems[index];
+                            return _historyCard(route, scale);
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
                 Padding(
                   padding: EdgeInsets.fromLTRB(
@@ -224,9 +198,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () {
-                            setState(() {
-                              _selectedDate = null;
-                            });
+                            setState(() => _selectedDate = null);
                           },
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(
@@ -254,11 +226,10 @@ class _HistoryPageState extends State<HistoryPage> {
                             final picked = await showDatePicker(
                               context: context,
                               initialDate: _selectedDate ?? now,
-                              firstDate: now.subtract(const Duration(days: 30)),
+                              firstDate: now.subtract(const Duration(days: 90)),
                               lastDate: now,
                               locale: const Locale('pt', 'BR'),
                             );
-
                             if (picked != null) {
                               setState(() {
                                 _selectedDate = DateTime(picked.year, picked.month, picked.day);
@@ -324,12 +295,97 @@ class _HistoryPageState extends State<HistoryPage> {
       ),
     );
   }
-}
 
-class _HistoryRouteItem {
-  const _HistoryRouteItem(this.title, this.date, this.status);
+  Widget _historyCard(AppRoute route, double scale) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final date = route.completedAt ?? route.createdAt;
+    final isConcluida = route.status == RouteStatus.concluida;
 
-  final String title;
-  final DateTime date;
-  final String status;
+    return Container(
+      margin: EdgeInsets.only(bottom: 12 * scale),
+      padding: EdgeInsets.all(14 * scale),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  route.name,
+                  style: TextStyle(
+                    fontSize: 17 * scale,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF141414),
+                  ),
+                ),
+                SizedBox(height: 3 * scale),
+                Text(
+                  'Data: ${_formatItemDate(date)}',
+                  style: TextStyle(
+                    fontSize: 15 * scale,
+                    color: isDark ? Colors.white70 : const Color(0xFF232323),
+                  ),
+                ),
+                SizedBox(height: 2 * scale),
+                Text(
+                  'Distância: ${route.totalDistanceKm.toStringAsFixed(1)} km',
+                  style: TextStyle(
+                    fontSize: 15 * scale,
+                    color: isDark ? Colors.white70 : const Color(0xFF232323),
+                  ),
+                ),
+                SizedBox(height: 2 * scale),
+                Text(
+                  'Pontos: ${route.points.map((p) => p.label).join(' → ')}',
+                  style: TextStyle(
+                    fontSize: 14 * scale,
+                    color: isDark ? Colors.white54 : const Color(0xFF555555),
+                  ),
+                ),
+                SizedBox(height: 2 * scale),
+                Text(
+                  'Status: ${isConcluida ? "Concluída" : "Cancelada"}',
+                  style: TextStyle(
+                    fontSize: 15 * scale,
+                    color: isDark ? Colors.white70 : const Color(0xFF232323),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 8 * scale),
+          Column(
+            children: [
+              Icon(
+                Icons.outlined_flag_rounded,
+                size: 28 * scale,
+                color: isDark ? Colors.white54 : const Color(0xFF1D1D1D),
+              ),
+              SizedBox(height: 22 * scale),
+              Icon(
+                isConcluida
+                    ? Icons.check_circle_outline_rounded
+                    : Icons.cancel_outlined,
+                size: 30 * scale,
+                color: isConcluida
+                    ? const Color(0xFF5C8C61)
+                    : const Color(0xFFE04A4A),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

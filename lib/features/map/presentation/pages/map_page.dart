@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -10,6 +7,9 @@ import '../../../history/presentation/pages/history_page.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../routes/presentation/pages/routes_page.dart';
+import '../../../../shared/data/route_model.dart';
+import '../../../../shared/data/route_service.dart';
+import '../../../../shared/data/routing_service.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../../../../shared/widgets/user_header_avatar.dart';
@@ -24,18 +24,16 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   final LatLng _fallbackCenter = const LatLng(-4.8645, -43.3573);
-
-  List<LatLng> _routePoints = const [];
-  LatLng? _userLocation;
-  bool _loadingLocation = true;
   int _selectedTab = 0;
-  final int _activeStepIndex = 2;
+
+  // Cache de polylines com rotas reais (chave = route.id)
+  final Map<String, List<LatLng>> _routePolylines = {};
+  bool _loadingRoutes = false;
 
   String _formatBrasiliaDate() {
     final brasiliaNow = DateTime.now().toUtc().add(const Duration(hours: -3));
     final raw = DateFormat("EEE, d 'de' MMMM", 'pt_BR').format(brasiliaNow);
     if (raw.isEmpty) return '';
-
     final withoutDot = raw.replaceAll('.', '');
     return withoutDot[0].toUpperCase() + withoutDot.substring(1);
   }
@@ -43,63 +41,58 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    unawaited(_loadMapData());
+    RouteService.instance.addListener(_onRoutesChanged);
+    _fetchAllRouteGeometries();
   }
 
-  Future<void> _loadMapData() async {
-    final userPosition = await _fetchUserLocation();
-    final center = userPosition ?? _fallbackCenter;
-
-    if (!mounted) return;
-
-    final points = _buildRoutePoints(center);
-    setState(() {
-      _userLocation = userPosition;
-      _routePoints = points;
-      _loadingLocation = false;
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _mapController.move(center, 18.5);
-    });
+  @override
+  void dispose() {
+    RouteService.instance.removeListener(_onRoutesChanged);
+    super.dispose();
   }
 
-  Future<LatLng?> _fetchUserLocation() async {
-    try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) return null;
-
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        return null;
-      }
-
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
-
-      return LatLng(pos.latitude, pos.longitude);
-    } catch (_) {
-      return null;
+  void _onRoutesChanged() {
+    if (mounted) {
+      _fetchAllRouteGeometries();
+      setState(() {});
     }
   }
 
-  List<LatLng> _buildRoutePoints(LatLng center) {
-    return [
-      LatLng(center.latitude - 0.010, center.longitude - 0.008),
-      LatLng(center.latitude - 0.006, center.longitude - 0.004),
-      LatLng(center.latitude - 0.001, center.longitude + 0.0005),
-      LatLng(center.latitude + 0.004, center.longitude + 0.005),
-      LatLng(center.latitude + 0.008, center.longitude + 0.009),
-    ];
+  Future<void> _fetchAllRouteGeometries() async {
+    final routes = _filteredRoutes();
+    if (routes.isEmpty) return;
+
+    // Verifica se há rotas novas que ainda não foram buscadas
+    final needsFetch = routes.where((r) => !_routePolylines.containsKey(r.id)).toList();
+    if (needsFetch.isEmpty) return;
+
+    setState(() => _loadingRoutes = true);
+
+    for (final route in needsFetch) {
+      final waypoints = route.points.map((p) => p.latLng).toList();
+      final realPath = await RoutingService.instance.getRoute(waypoints);
+      if (mounted) {
+        _routePolylines[route.id] = realPath;
+      }
+    }
+
+    if (mounted) {
+      setState(() => _loadingRoutes = false);
+    }
+  }
+
+  List<AppRoute> _filteredRoutes() {
+    final service = RouteService.instance;
+    switch (_selectedTab) {
+      case 0:
+        return service.routes.where((r) => r.status == RouteStatus.ativa || r.status == RouteStatus.pausada).toList();
+      case 1:
+        return service.scheduledRoutes;
+      case 2:
+        return service.completedRoutes;
+      default:
+        return service.routes;
+    }
   }
 
   @override
@@ -110,10 +103,44 @@ class _MapPageState extends State<MapPage> {
     final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
     final dateText = _formatBrasiliaDate();
     final headerGradient = isDark
-      ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
-      : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
-    final mapCenter = _userLocation ?? _fallbackCenter;
-    final stops = _routePoints.isEmpty ? _buildRoutePoints(mapCenter) : _routePoints;
+        ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
+        : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
+
+    final routes = _filteredRoutes();
+    final activeRoute = routes.isNotEmpty ? routes.first : null;
+
+    // Juntar todos os pontos de todas as rotas filtradas para exibir no mapa
+    final allMarkers = <Marker>[];
+    final allPolylines = <Polyline>[];
+
+    for (final route in routes) {
+      // Usar rota real do OSRM se disponível, senão linha reta como fallback
+      final polylinePoints = _routePolylines[route.id]
+          ?? route.points.map((p) => p.latLng).toList();
+
+      allPolylines.add(
+        Polyline(
+          points: polylinePoints,
+          color: route.status == RouteStatus.ativa
+              ? (isDark ? const Color(0xFFB06CFF) : const Color(0xFFDB7B2C))
+              : route.status == RouteStatus.pausada
+                  ? const Color(0xFFE04A4A)
+                  : const Color(0xFF888888),
+          strokeWidth: 5,
+        ),
+      );
+
+      for (final point in route.points) {
+        allMarkers.add(
+          Marker(
+            width: 34,
+            height: 34,
+            point: point.latLng,
+            child: _stopMarker(point.label),
+          ),
+        );
+      }
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -184,90 +211,33 @@ class _MapPageState extends State<MapPage> {
                 FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    initialCenter: mapCenter,
-                    initialZoom: 18.5,
+                    initialCenter: _fallbackCenter,
+                    initialZoom: 15.0,
                   ),
                   children: [
                     TileLayer(
                       urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.fastlap.app',
                     ),
-                    PolylineLayer(
-                      polylines: [
-                        Polyline(
-                          points: stops,
-                          color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFDB7B2C),
-                          strokeWidth: 6,
-                        ),
-                      ],
-                    ),
-                    MarkerLayer(
-                      markers: [
-                        for (var i = 0; i < stops.length; i++)
-                          Marker(
-                            width: 34,
-                            height: 34,
-                            point: stops[i],
-                            child: _stopMarker(String.fromCharCode(65 + i)),
-                          ),
-                        if (_userLocation != null)
-                          Marker(
-                            width: 22,
-                            height: 22,
-                            point: _userLocation!,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFFB06CFF) : const Color(0xFF2D87FF),
-                                borderRadius: BorderRadius.circular(11),
-                                border: Border.all(color: Colors.white, width: 3),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.15),
-                                    blurRadius: 8,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (stops.length > _activeStepIndex)
-                          Marker(
-                            width: 34,
-                            height: 44,
-                            point: stops[_activeStepIndex],
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.local_shipping_rounded,
-                                  color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE36F15),
-                                  size: 22,
-                                ),
-                                const SizedBox(height: 2),
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE36F15),
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
+                    if (allPolylines.isNotEmpty)
+                      PolylineLayer(polylines: allPolylines),
+                    if (allMarkers.isNotEmpty)
+                      MarkerLayer(markers: allMarkers),
                   ],
                 ),
+
+                // Filtros
                 Positioned(
                   top: 10 * scale,
                   left: horizontalPadding,
                   right: horizontalPadding,
                   child: Container(
-                    padding: EdgeInsets.all(8 * scale),
+                    padding: EdgeInsets.all(4 * scale),
                     decoration: BoxDecoration(
                       color: isDark
                           ? const Color(0xFF1A1D2A).withValues(alpha: 0.96)
                           : Colors.white.withValues(alpha: 0.96),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.08),
@@ -276,71 +246,150 @@ class _MapPageState extends State<MapPage> {
                         ),
                       ],
                     ),
-                    child: Column(
+                    child: Row(
                       children: [
-                        Container(
-                          height: 48 * scale,
-                          padding: EdgeInsets.symmetric(horizontal: 14 * scale),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF111421) : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isDark ? const Color(0xFF31364A) : const Color(0xFFD8D8D8),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.search, color: const Color(0xFF858585), size: 22 * scale),
-                              SizedBox(width: 8 * scale),
-                              Text(
-                                'Buscar endereco ou parada...',
-                                style: TextStyle(
-                                  color: isDark ? Colors.white70 : const Color(0xFF858585),
-                                  fontSize: 16 * scale,
-                                ),
-                              ),
-                            ],
-                          ),
+                        _MapTabChip(
+                          label: 'Ativas',
+                          selected: _selectedTab == 0,
+                          scale: scale,
+                          onTap: () {
+                            setState(() => _selectedTab = 0);
+                            _fetchAllRouteGeometries();
+                          },
                         ),
-                        SizedBox(height: 8 * scale),
-                        Row(
-                          children: [
-                            _MapTabChip(
-                              label: 'Ativas',
-                              selected: _selectedTab == 0,
-                              scale: scale,
-                              onTap: () => setState(() => _selectedTab = 0),
-                            ),
-                            _MapTabChip(
-                              label: 'Agendadas',
-                              selected: _selectedTab == 1,
-                              scale: scale,
-                              onTap: () => setState(() => _selectedTab = 1),
-                            ),
-                            _MapTabChip(
-                              label: 'Historico',
-                              selected: _selectedTab == 2,
-                              scale: scale,
-                              onTap: () => setState(() => _selectedTab = 2),
-                            ),
-                          ],
+                        _MapTabChip(
+                          label: 'Agendadas',
+                          selected: _selectedTab == 1,
+                          scale: scale,
+                          onTap: () {
+                            setState(() => _selectedTab = 1);
+                            _fetchAllRouteGeometries();
+                          },
+                        ),
+                        _MapTabChip(
+                          label: 'Historico',
+                          selected: _selectedTab == 2,
+                          scale: scale,
+                          onTap: () {
+                            setState(() => _selectedTab = 2);
+                            _fetchAllRouteGeometries();
+                          },
                         ),
                       ],
                     ),
                   ),
                 ),
-                Positioned(
-                  left: horizontalPadding,
-                  right: horizontalPadding,
-                  bottom: 12 * scale,
-                  child: _bottomRouteCard(scale),
-                ),
-                if (_loadingLocation)
-                  const Positioned(
-                    top: 0,
+
+                // Card de rota ativa na parte inferior
+                if (activeRoute != null)
+                  Positioned(
+                    left: horizontalPadding,
+                    right: horizontalPadding,
+                    bottom: 12 * scale,
+                    child: _bottomRouteCard(activeRoute, scale),
+                  ),
+
+                // Indicador de carregamento de rotas
+                if (_loadingRoutes)
+                  Positioned(
+                    top: 60 * scale,
                     left: 0,
                     right: 0,
-                    child: LinearProgressIndicator(minHeight: 2),
+                    child: Center(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16 * scale, vertical: 8 * scale),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1A1D2A).withValues(alpha: 0.92)
+                              : Colors.white.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 16 * scale,
+                              height: 16 * scale,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                              ),
+                            ),
+                            SizedBox(width: 8 * scale),
+                            Text(
+                              'Calculando rota...',
+                              style: TextStyle(
+                                fontSize: 13 * scale,
+                                color: isDark ? Colors.white70 : const Color(0xFF555555),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Mensagem quando não há rotas
+                if (routes.isEmpty)
+                  Positioned(
+                    left: horizontalPadding,
+                    right: horizontalPadding,
+                    bottom: 12 * scale,
+                    child: Container(
+                      padding: EdgeInsets.all(16 * scale),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF1A1D2A).withValues(alpha: 0.97)
+                            : Colors.white.withValues(alpha: 0.97),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.alt_route_rounded,
+                            size: 40 * scale,
+                            color: isDark ? Colors.white24 : const Color(0xFFCCCCCC),
+                          ),
+                          SizedBox(height: 8 * scale),
+                          Text(
+                            _selectedTab == 0
+                                ? 'Nenhuma rota ativa para exibir'
+                                : _selectedTab == 1
+                                    ? 'Nenhuma rota agendada'
+                                    : 'Nenhuma rota no histórico',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15 * scale,
+                              color: isDark ? Colors.white38 : const Color(0xFF999999),
+                            ),
+                          ),
+                          SizedBox(height: 8 * scale),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute<void>(builder: (_) => const RoutesPage()),
+                              );
+                            },
+                            child: Text(
+                              'Ir para Rotas',
+                              style: TextStyle(
+                                fontSize: 15 * scale,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -402,8 +451,35 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Widget _bottomRouteCard(double scale) {
+  Widget _bottomRouteCard(AppRoute route, double scale) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    Color statusBgColor;
+    Color statusTextColor;
+    String statusLabel;
+
+    switch (route.status) {
+      case RouteStatus.ativa:
+        statusBgColor = const Color(0xFFCFF0D6);
+        statusTextColor = const Color(0xFF267A3B);
+        statusLabel = 'Ativa';
+      case RouteStatus.pausada:
+        statusBgColor = const Color(0xFFFFD9CC);
+        statusTextColor = const Color(0xFF9A4A2D);
+        statusLabel = 'Pausada';
+      case RouteStatus.agendada:
+        statusBgColor = const Color(0xFFDDE4EC);
+        statusTextColor = const Color(0xFF3A4653);
+        statusLabel = 'Agendada';
+      case RouteStatus.concluida:
+        statusBgColor = const Color(0xFFD4E8D9);
+        statusTextColor = const Color(0xFF1B6B2E);
+        statusLabel = 'Concluída';
+      case RouteStatus.cancelada:
+        statusBgColor = const Color(0xFFFFD6D6);
+        statusTextColor = const Color(0xFFA93333);
+        statusLabel = 'Cancelada';
+    }
 
     return Container(
       padding: EdgeInsets.fromLTRB(14 * scale, 12 * scale, 14 * scale, 0),
@@ -427,7 +503,7 @@ class _MapPageState extends State<MapPage> {
             children: [
               Expanded(
                 child: Text(
-                  'Rota 04 - Centro',
+                  route.name,
                   style: TextStyle(
                     fontSize: 18 * scale,
                     fontWeight: FontWeight.w700,
@@ -438,13 +514,13 @@ class _MapPageState extends State<MapPage> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 6 * scale),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFCFF0D6),
+                  color: statusBgColor,
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Text(
-                  'Em Progresso',
+                  statusLabel,
                   style: TextStyle(
-                    color: const Color(0xFF267A3B),
+                    color: statusTextColor,
                     fontSize: 15 * scale,
                     fontWeight: FontWeight.w500,
                   ),
@@ -453,25 +529,26 @@ class _MapPageState extends State<MapPage> {
             ],
           ),
           SizedBox(height: 8 * scale),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _dotStep('A', true, scale),
-              _stepLine(active: false),
-              _dotStep('B', false, scale),
-              _stepLine(active: true),
-              _dotStep('C', true, scale, showTruck: true),
-              _stepLine(active: false),
-              _dotStep('D', false, scale),
-              _stepLine(active: false),
-              _dotStep('E', false, scale),
-            ],
+
+          // Pontos timeline
+          SizedBox(
+            height: 30 * scale,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                for (var i = 0; i < route.points.length; i++) ...[
+                  _dotStep(route.points[i].label, scale),
+                  if (i < route.points.length - 1) _stepLine(),
+                ],
+              ],
+            ),
           ),
           SizedBox(height: 8 * scale),
+
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Est. 12:45 | 10.1 km restantes',
+              'Est. ${route.estimatedTime} | ${route.totalDistanceKm.toStringAsFixed(1)} km',
               style: TextStyle(
                 color: isDark ? Colors.white : const Color(0xFF2A2A2A),
                 fontSize: 15 * scale,
@@ -479,51 +556,60 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
           SizedBox(height: 8 * scale),
-          Container(height: 1, color: const Color(0xFFE2E2E2)),
+          Container(height: 1, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+
+          // Ações
           SizedBox(
             height: 48 * scale,
-            child: Row(
-              children: [
-                Expanded(
-                  child: _actionRow(Icons.receipt_long_rounded, 'Ver Detalhes', scale),
-                ),
-                Container(width: 1, height: 24 * scale, color: const Color(0xFFE2E2E2)),
-                Expanded(
-                  child: _actionRow(Icons.navigation_outlined, 'Navegar', scale),
-                ),
-              ],
-            ),
+            child: _buildMapActions(route, scale),
           ),
         ],
       ),
     );
   }
 
-  Widget _actionRow(IconData icon, String label, double scale) {
+  Widget _buildMapActions(AppRoute route, double scale) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFC7742A),
-          size: 21 * scale,
-        ),
-        SizedBox(width: 6 * scale),
-        Text(
-          label,
-          style: TextStyle(
-            color: isDark ? Colors.white : const Color(0xFF2A2A2A),
-            fontSize: 16 * scale,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
+    switch (route.status) {
+      case RouteStatus.ativa:
+        return Row(
+          children: [
+            Expanded(child: _actionRow(Icons.pause_circle_outline, 'Pausar', scale, onTap: () {
+              RouteService.instance.updateStatus(route.id, RouteStatus.pausada);
+            })),
+            Container(width: 1, height: 24 * scale, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+            Expanded(child: _actionRow(Icons.check_circle_outline, 'Concluir', scale, onTap: () {
+              RouteService.instance.updateStatus(route.id, RouteStatus.concluida);
+            })),
+          ],
+        );
+      case RouteStatus.pausada:
+        return Row(
+          children: [
+            Expanded(child: _actionRow(Icons.play_circle_outline, 'Retomar', scale, onTap: () {
+              RouteService.instance.updateStatus(route.id, RouteStatus.ativa);
+            })),
+            Container(width: 1, height: 24 * scale, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+            Expanded(child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale, onTap: () {
+              RouteService.instance.updateStatus(route.id, RouteStatus.cancelada);
+            })),
+          ],
+        );
+      default:
+        return Row(
+          children: [
+            Expanded(child: _actionRow(Icons.receipt_long_rounded, 'Ver Detalhes', scale, onTap: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute<void>(builder: (_) => const RoutesPage()),
+              );
+            })),
+          ],
+        );
+    }
   }
 
-  Widget _dotStep(String label, bool active, double scale, {bool showTruck = false}) {
+  Widget _dotStep(String label, double scale) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
@@ -531,43 +617,58 @@ class _MapPageState extends State<MapPage> {
       height: 30 * scale,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: active
-            ? (isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23))
-            : const Color(0xFFCBCBCB),
+        color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
         borderRadius: BorderRadius.circular(15),
       ),
-      child: showTruck
-          ? Icon(
-              Icons.local_shipping_rounded,
-              color: Colors.white,
-              size: 17 * scale,
-            )
-          : Text(
-              label,
-              style: TextStyle(
-                color: active
-                    ? Colors.white
-                    : (isDark ? const Color(0xFFCED3E6) : const Color(0xFF676767)),
-                fontWeight: FontWeight.w700,
-                fontSize: 14 * scale,
-              ),
-            ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 14 * scale,
+        ),
+      ),
     );
   }
 
-  Widget _stepLine({required bool active}) {
+  Widget _stepLine() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Expanded(
       child: Container(
         height: 4,
         margin: const EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
-          color: active
-              ? (Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFFB06CFF)
-                    : const Color(0xFFE67A23))
-              : const Color(0xFFD8D8D8),
+          color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
           borderRadius: BorderRadius.circular(8),
         ),
+      ),
+    );
+  }
+
+  Widget _actionRow(IconData icon, String label, double scale, {VoidCallback? onTap}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFC7742A),
+            size: 21 * scale,
+          ),
+          SizedBox(width: 6 * scale),
+          Text(
+            label,
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF2A2A2A),
+              fontSize: 16 * scale,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

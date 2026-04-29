@@ -6,14 +6,38 @@ import '../../../history/presentation/pages/history_page.dart';
 import '../../../map/presentation/pages/map_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../routes/presentation/pages/routes_page.dart';
+import '../../../routes/presentation/pages/create_route_page.dart';
+import '../../../vehicles/presentation/pages/vehicles_page.dart';
+import '../../../../shared/data/route_service.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../../../../shared/widgets/user_header_avatar.dart';
 import '../widgets/quick_action_card.dart';
 import '../widgets/summary_card.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    RouteService.instance.addListener(_onChanged);
+  }
+
+  @override
+  void dispose() {
+    RouteService.instance.removeListener(_onChanged);
+    super.dispose();
+  }
+
+  void _onChanged() {
+    if (mounted) setState(() {});
+  }
 
   String _formatBrasiliaNow() {
     final brasiliaNow = DateTime.now().toUtc().add(const Duration(hours: -3));
@@ -28,6 +52,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final userFuture = AuthService().getActiveUser();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final routeService = RouteService.instance;
     final size = MediaQuery.of(context).size;
     final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
     final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
@@ -135,24 +160,24 @@ class HomePage extends StatelessWidget {
                       scrollDirection: Axis.horizontal,
                       children: [
                         SummaryCard(
-                          title: 'ENTREGAS HOJE',
-                          value: '32',
-                          subtitle: 'Concluidas: 28 |\nPendentes: 4',
-                          icon: Icons.inventory_2_outlined,
+                          title: 'ROTAS ATIVAS',
+                          value: '${routeService.activeRoutes.length}',
+                          subtitle: 'Pausadas: ${routeService.pausedRoutes.length} |\nAgendadas: ${routeService.scheduledRoutes.length}',
+                          icon: Icons.alt_route_rounded,
                           scale: scale,
                         ),
                         SizedBox(width: 10 * scale),
                         SummaryCard(
-                          title: 'TEMPO ESTIMADO',
-                          value: '2h 45min',
-                          subtitle: 'Tempo Total de\nRota',
-                          icon: Icons.access_time,
+                          title: 'CONCLUÍDAS HOJE',
+                          value: '${routeService.todayCompleted}',
+                          subtitle: 'Total:\n${routeService.completedRoutes.length}',
+                          icon: Icons.check_circle_outline,
                           scale: scale,
                         ),
                         SizedBox(width: 10 * scale),
                         SummaryCard(
                           title: 'KMs PERCORRIDOS',
-                          value: '84.7',
+                          value: routeService.todayKm.toStringAsFixed(1),
                           subtitle: 'Hoje',
                           icon: Icons.speed,
                           scale: scale,
@@ -182,33 +207,45 @@ class HomePage extends StatelessWidget {
                       ],
                     ),
                     padding: EdgeInsets.symmetric(horizontal: 10 * scale),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'INICIAR NOVA ROTA',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 17 * scale,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(32),
+                        onTap: () async {
+                          final result = await Navigator.of(context).push<bool>(
+                            MaterialPageRoute(builder: (_) => const CreateRoutePage()),
+                          );
+                          if (result == true && mounted) setState(() {});
+                        },
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'INICIAR NOVA ROTA',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17 * scale,
+                                ),
+                              ),
                             ),
-                          ),
+                            Container(
+                              width: 44 * scale,
+                              height: 44 * scale,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.26),
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              child: Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 26 * scale,
+                              ),
+                            ),
+                          ],
                         ),
-                        Container(
-                          width: 44 * scale,
-                          height: 44 * scale,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.26),
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: Icon(
-                            Icons.add,
-                            color: Colors.white,
-                            size: 26 * scale,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                   SizedBox(height: 20 * scale),
@@ -229,25 +266,57 @@ class HomePage extends StatelessWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
                     children: [
-                      QuickActionCard(
-                        title: 'Minhas Rotas',
-                        icon: Icons.map_outlined,
-                        scale: scale,
+                      GestureDetector(
+                        onTap: () async {
+                          final result = await Navigator.of(context).push<dynamic>(
+                            MaterialPageRoute(builder: (_) => const VehiclesPage()),
+                          );
+                          if (result != null && mounted) setState(() {});
+                        },
+                        child: QuickActionCard(
+                          title: 'Minhas Rotas',
+                          icon: Icons.map_outlined,
+                          scale: scale,
+                        ),
                       ),
-                      QuickActionCard(
-                        title: 'Entregas',
-                        icon: Icons.inventory_2_outlined,
-                        scale: scale,
+                      GestureDetector(
+                        onTap: () async {
+                          final result = await Navigator.of(context).push<dynamic>(
+                            MaterialPageRoute(builder: (_) => const VehiclesPage()),
+                          );
+                          if (result != null && mounted) setState(() {});
+                        },
+                        child: QuickActionCard(
+                          title: 'Entregas',
+                          icon: Icons.inventory_2_outlined,
+                          scale: scale,
+                        ),
                       ),
-                      QuickActionCard(
-                        title: 'Veiculo',
-                        icon: Icons.local_shipping_outlined,
-                        scale: scale,
+                      GestureDetector(
+                        onTap: () async {
+                          final result = await Navigator.of(context).push<dynamic>(
+                            MaterialPageRoute(builder: (_) => const VehiclesPage()),
+                          );
+                          if (result != null && mounted) setState(() {});
+                        },
+                        child: QuickActionCard(
+                          title: 'Veiculo',
+                          icon: Icons.local_shipping_outlined,
+                          scale: scale,
+                        ),
                       ),
-                      QuickActionCard(
-                        title: 'Relatorios',
-                        icon: Icons.insert_chart_outlined,
-                        scale: scale,
+                      GestureDetector(
+                        onTap: () async {
+                          final result = await Navigator.of(context).push<dynamic>(
+                            MaterialPageRoute(builder: (_) => const VehiclesPage()),
+                          );
+                          if (result != null && mounted) setState(() {});
+                        },
+                        child: QuickActionCard(
+                          title: 'Relatorios',
+                          icon: Icons.insert_chart_outlined,
+                          scale: scale,
+                        ),
                       ),
                     ],
                   ),
