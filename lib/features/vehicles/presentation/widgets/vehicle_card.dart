@@ -114,37 +114,72 @@ class VehicleCard extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: Text(
-                  '📦 ${vehicle.carryCapacity.toStringAsFixed(0)} kg',
-                  style: TextStyle(
-                    fontSize: 11 * scale,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.grey[300] : Colors.grey[700],
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      vehicle.isAvailable ? Icons.check_circle : Icons.cancel,
+                      size: 12 * scale,
+                      color: vehicle.isAvailable ? Colors.green : Colors.red,
+                    ),
+                    SizedBox(width: 2 * scale),
+                    Text(
+                      vehicle.isAvailable ? 'Disponível' : 'Indisponível',
+                      style: TextStyle(
+                        fontSize: 10 * scale,
+                        fontWeight: FontWeight.w500,
+                        color: vehicle.isAvailable ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           SizedBox(height: 8 * scale),
+          // Availability status
+          Row(
+            children: [
+              Icon(
+                vehicle.isAvailable ? Icons.check_circle : Icons.cancel,
+                size: 16 * scale,
+                color: vehicle.isAvailable ? Colors.green : Colors.red,
+              ),
+              SizedBox(width: 4 * scale),
+              Text(
+                vehicle.isAvailable ? 'Disponível' : 'Indisponível',
+                style: TextStyle(
+                  fontSize: 11 * scale,
+                  fontWeight: FontWeight.w500,
+                  color: vehicle.isAvailable ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4 * scale),
+
           Row(
             children: [
               Expanded(
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: onSelect,
+                    onTap: vehicle.isAvailable ? onSelect : null,
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 6 * scale),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        gradient: LinearGradient(
-                          colors: isDark
-                              ? const [Color(0xFF8B4DDE), Color(0xFFB06CFF)]
-                              : const [Color(0xFFFF8C22), Color(0xFFFF6B00)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
+                        gradient: vehicle.isAvailable
+                          ? LinearGradient(
+                              colors: isDark
+                                  ? const [Color(0xFF8B4DDE), Color(0xFFB06CFF)]
+                                  : const [Color(0xFFFF8C22), Color(0xFFFF6B00)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            )
+                          : null,
+                        color: vehicle.isAvailable ? null : Colors.grey.withOpacity(0.3),
                       ),
                       child: Text(
                         vehicle.isSelected ? 'SELECIONADO' : 'SELECIONAR',
@@ -152,7 +187,7 @@ class VehicleCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11 * scale,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: vehicle.isAvailable ? Colors.white : Colors.grey,
                         ),
                       ),
                     ),
@@ -163,15 +198,15 @@ class VehicleCard extends StatelessWidget {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: onEdit,
+                  onTap: vehicle.isAvailable ? onEdit : null,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
-                      color: isDark ? const Color(0xFF1A1D24) : const Color(0xFFF0F0F0),
+                      color: vehicle.isAvailable ? (isDark ? const Color(0xFF1A1D24) : const Color(0xFFF0F0F0)) : Colors.grey.withOpacity(0.3),
                     ),
-                    child: Icon(Icons.edit, size: 14 * scale, color: isDark ? Colors.grey[300] : Colors.grey[700]),
+                    child: Icon(Icons.edit, size: 14 * scale, color: vehicle.isAvailable ? (isDark ? Colors.grey[300] : Colors.grey[700]) : Colors.grey),
                   ),
                 ),
               ),

@@ -1,4 +1,6 @@
 import 'package:latlong2/latlong.dart';
+import 'vehicle_model.dart';
+import 'vehicle_service.dart';
 
 enum RouteStatus { ativa, pausada, agendada, concluida, cancelada }
 
@@ -31,6 +33,7 @@ class AppRoute {
     required this.name,
     required this.points,
     required this.status,
+    this.vehicleId,
     this.scheduledTime,
     DateTime? createdAt,
     this.completedAt,
@@ -40,6 +43,7 @@ class AppRoute {
   final String name;
   final List<RoutePoint> points; // de 2 a 5 pontos (A=inicio + até 4 destinos)
   RouteStatus status;
+  final String? vehicleId;
   DateTime? scheduledTime;
   final DateTime createdAt;
   DateTime? completedAt;
@@ -53,8 +57,19 @@ class AppRoute {
     return total;
   }
 
+  Vehicle? get vehicle {
+    if (vehicleId == null) return null;
+    return VehicleService.instance.getVehicleById(vehicleId!);
+  }
+
   String get estimatedTime {
-    // ~30 km/h velocidade média urbana
+    final v = vehicle;
+    if (v != null) {
+      final minutes = v.calculateTravelTimeMinutes(totalDistanceKm).round();
+      if (minutes < 60) return '$minutes min';
+      return '${minutes ~/ 60}h ${minutes % 60}min';
+    }
+    // Fallback
     final hours = totalDistanceKm / 30;
     final minutes = (hours * 60).round();
     if (minutes < 60) return '$minutes min';

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import '../../../../shared/data/vehicle_model.dart';
 import '../../../../shared/data/vehicle_service.dart';
@@ -237,7 +239,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
                                 onDelete: () => _deleteVehicle(vehicle),
                               ),
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
                     SizedBox(height: 16 * scale),

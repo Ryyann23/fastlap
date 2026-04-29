@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'caxias_pois.dart';
 import 'route_model.dart';
 
+
 /// Serviço singleton para gerenciar rotas do app
 class RouteService extends ChangeNotifier {
   RouteService._();
@@ -40,7 +41,8 @@ class RouteService extends ChangeNotifier {
   AppRoute createRoute({
     required String name,
     required List<RoutePoint> selectedPoints,
-    required RouteStatus status,
+    RouteStatus status = RouteStatus.ativa,
+    String? vehicleId,
     DateTime? scheduledTime,
   }) {
     // Ponto A é sempre UniFacema
@@ -57,6 +59,7 @@ class RouteService extends ChangeNotifier {
       name: name,
       points: labeledPoints,
       status: status,
+      vehicleId: vehicleId,
       scheduledTime: scheduledTime,
     );
 

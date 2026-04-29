@@ -24,7 +24,7 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   final LatLng _fallbackCenter = const LatLng(-4.8645, -43.3573);
-  int _selectedTab = 0;
+
 
   // Cache de polylines com rotas reais (chave = route.id)
   final Map<String, List<LatLng>> _routePolylines = {};
@@ -83,16 +83,7 @@ class _MapPageState extends State<MapPage> {
 
   List<AppRoute> _filteredRoutes() {
     final service = RouteService.instance;
-    switch (_selectedTab) {
-      case 0:
-        return service.routes.where((r) => r.status == RouteStatus.ativa || r.status == RouteStatus.pausada).toList();
-      case 1:
-        return service.scheduledRoutes;
-      case 2:
-        return service.completedRoutes;
-      default:
-        return service.routes;
-    }
+    return service.routes.where((r) => r.status == RouteStatus.ativa).toList();
   }
 
   @override
@@ -226,59 +217,8 @@ class _MapPageState extends State<MapPage> {
                   ],
                 ),
 
-                // Filtros
-                Positioned(
-                  top: 10 * scale,
-                  left: horizontalPadding,
-                  right: horizontalPadding,
-                  child: Container(
-                    padding: EdgeInsets.all(4 * scale),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF1A1D2A).withValues(alpha: 0.96)
-                          : Colors.white.withValues(alpha: 0.96),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        _MapTabChip(
-                          label: 'Ativas',
-                          selected: _selectedTab == 0,
-                          scale: scale,
-                          onTap: () {
-                            setState(() => _selectedTab = 0);
-                            _fetchAllRouteGeometries();
-                          },
-                        ),
-                        _MapTabChip(
-                          label: 'Agendadas',
-                          selected: _selectedTab == 1,
-                          scale: scale,
-                          onTap: () {
-                            setState(() => _selectedTab = 1);
-                            _fetchAllRouteGeometries();
-                          },
-                        ),
-                        _MapTabChip(
-                          label: 'Historico',
-                          selected: _selectedTab == 2,
-                          scale: scale,
-                          onTap: () {
-                            setState(() => _selectedTab = 2);
-                            _fetchAllRouteGeometries();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+
+
 
                 // Card de rota ativa na parte inferior
                 if (activeRoute != null)
@@ -360,11 +300,7 @@ class _MapPageState extends State<MapPage> {
                           ),
                           SizedBox(height: 8 * scale),
                           Text(
-                            _selectedTab == 0
-                                ? 'Nenhuma rota ativa para exibir'
-                                : _selectedTab == 1
-                                    ? 'Nenhuma rota agendada'
-                                    : 'Nenhuma rota no histórico',
+'Nenhuma rota ativa para exibir',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 15 * scale,
@@ -674,54 +610,5 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
-class _MapTabChip extends StatelessWidget {
-  const _MapTabChip({
-    required this.label,
-    required this.selected,
-    required this.scale,
-    required this.onTap,
-  });
 
-  final String label;
-  final bool selected;
-  final double scale;
-  final VoidCallback onTap;
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: EdgeInsets.symmetric(vertical: 10 * scale),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: selected
-                ? LinearGradient(
-                    colors: isDark
-                        ? const [Color(0xFF8B4DDE), Color(0xFFB06CFF)]
-                        : const [Color(0xFFFF8C22), Color(0xFFFF6B00)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            color: selected ? null : (isDark ? const Color(0xFF111421) : Colors.transparent),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15 * scale,
-              color: selected ? Colors.white : (isDark ? Colors.white : const Color(0xFF2A2A2A)),
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

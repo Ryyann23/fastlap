@@ -11,13 +11,14 @@ extension VehicleTypeDisplay on VehicleType {
 }
 
 class Vehicle {
-  Vehicle({
+Vehicle({
     required this.id,
     required this.name,
     required this.type,
     required this.speedPerKm,
     required this.carryCapacity,
     required this.weight,
+    this.isAvailable = true,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -27,6 +28,7 @@ class Vehicle {
   final double speedPerKm; // km/h
   final double carryCapacity; // em kg
   final double weight; // em kg
+  final bool isAvailable;
   final DateTime createdAt;
   bool isSelected = false;
 
@@ -37,6 +39,7 @@ class Vehicle {
     double? speedPerKm,
     double? carryCapacity,
     double? weight,
+    bool? isAvailable,
     DateTime? createdAt,
     bool? isSelected,
   }) {
@@ -47,6 +50,7 @@ class Vehicle {
       speedPerKm: speedPerKm ?? this.speedPerKm,
       carryCapacity: carryCapacity ?? this.carryCapacity,
       weight: weight ?? this.weight,
+      isAvailable: isAvailable ?? this.isAvailable,
       createdAt: createdAt ?? this.createdAt,
     )..isSelected = isSelected ?? this.isSelected;
   }

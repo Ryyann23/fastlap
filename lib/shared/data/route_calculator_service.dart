@@ -17,9 +17,10 @@ class RouteCalculatorService {
   final VehicleService _vehicleService = VehicleService();
 
   /// Calculates the time in minutes for a vehicle to complete a route
-  /// Returns null if no vehicle is selected
+  /// Returns null if no vehicle found for route.vehicleId
   int? calculateRouteTravelTimeMinutes(AppRoute route) {
-    final vehicle = _vehicleService.selectedVehicle;
+    if (route.vehicleId == null) return null;
+    final vehicle = _vehicleService.getVehicleById(route.vehicleId!);
     if (vehicle == null) return null;
 
     final travelTimeMinutes = vehicle.calculateTravelTimeMinutes(route.totalDistanceKm);

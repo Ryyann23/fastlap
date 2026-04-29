@@ -21,6 +21,7 @@ class VehicleService extends ChangeNotifier {
       speedPerKm: 80.0,
       carryCapacity: 50.0,
       weight: 150.0,
+      isAvailable: true,
     ),
     Vehicle(
       id: const Uuid().v4(),
@@ -29,12 +30,14 @@ class VehicleService extends ChangeNotifier {
       speedPerKm: 100.0,
       carryCapacity: 500.0,
       weight: 1500.0,
+      isAvailable: true,
     ),
   ];
 
   Vehicle? _selectedVehicle;
 
   List<Vehicle> get vehicles => List.unmodifiable(_vehicles);
+  List<Vehicle> get availableVehicles => _vehicles.where((v) => v.isAvailable).toList();
   Vehicle? get selectedVehicle => _selectedVehicle;
 
   void addVehicle(Vehicle vehicle) {

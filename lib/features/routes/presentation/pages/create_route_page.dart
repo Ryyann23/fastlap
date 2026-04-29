@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../shared/data/caxias_pois.dart';
 import '../../../../shared/data/route_model.dart';
 import '../../../../shared/data/route_service.dart';
+import '../../../../shared/data/vehicle_model.dart';
+import '../../../../shared/data/vehicle_service.dart';
 
 class CreateRoutePage extends StatefulWidget {
   const CreateRoutePage({super.key});
@@ -14,9 +15,12 @@ class CreateRoutePage extends StatefulWidget {
 
 class _CreateRoutePageState extends State<CreateRoutePage> {
   final _nameController = TextEditingController();
-  RouteStatus _selectedStatus = RouteStatus.ativa;
-  DateTime? _scheduledTime;
+  String? _selectedVehicleId;
   final List<RoutePoint> _selectedPoints = [];
+
+
+
+
 
   @override
   void dispose() {
@@ -47,9 +51,9 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
       );
       return;
     }
-    if (_selectedStatus == RouteStatus.agendada && _scheduledTime == null) {
+    if (_selectedVehicleId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione o horário do agendamento')),
+        const SnackBar(content: Text('Selecione um veículo disponível')),
       );
       return;
     }
@@ -57,34 +61,14 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
     RouteService.instance.createRoute(
       name: _nameController.text.trim(),
       selectedPoints: _selectedPoints,
-      status: _selectedStatus,
-      scheduledTime: _scheduledTime,
+      status: RouteStatus.ativa,
+      vehicleId: _selectedVehicleId!,
     );
 
     Navigator.of(context).pop(true);
   }
 
-  Future<void> _pickScheduledTime() async {
-    final now = DateTime.now();
-    final date = await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 30)),
-      locale: const Locale('pt', 'BR'),
-    );
-    if (date == null || !mounted) return;
 
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(now),
-    );
-    if (time == null || !mounted) return;
-
-    setState(() {
-      _scheduledTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,9 +183,9 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
 
                   SizedBox(height: 20 * scale),
 
-                  // Status
+                  // Vehicle selector
                   Text(
-                    'Status da Rota',
+                    'Selecionar Veículo',
                     style: TextStyle(
                       fontSize: 16 * scale,
                       fontWeight: FontWeight.w600,
@@ -209,54 +193,66 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                     ),
                   ),
                   SizedBox(height: 8 * scale),
-                  Row(
-                    children: [
-                      _statusChip('Ativa', RouteStatus.ativa, scale),
-                      SizedBox(width: 8 * scale),
-                      _statusChip('Pausada', RouteStatus.pausada, scale),
-                      SizedBox(width: 8 * scale),
-                      _statusChip('Agendada', RouteStatus.agendada, scale),
-                    ],
-                  ),
-
-                  if (_selectedStatus == RouteStatus.agendada) ...[
-                    SizedBox(height: 12 * scale),
-                    GestureDetector(
-                      onTap: _pickScheduledTime,
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(14 * scale),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isDark ? const Color(0xFF31364A) : const Color(0xFFD8D8D8),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              color: isDark ? Colors.white70 : const Color(0xFF858585),
-                              size: 22 * scale,
-                            ),
-                            SizedBox(width: 10 * scale),
-                            Text(
-                              _scheduledTime == null
-                                  ? 'Selecionar data e horário'
-                                  : DateFormat("dd/MM/yyyy 'às' HH:mm", 'pt_BR').format(_scheduledTime!),
-                              style: TextStyle(
-                                color: _scheduledTime == null
-                                    ? (isDark ? Colors.white54 : const Color(0xFF858585))
-                                    : (isDark ? Colors.white : const Color(0xFF1A1A1A)),
-                                fontSize: 16 * scale,
-                              ),
-                            ),
-                          ],
-                        ),
+                  Container(
+                    padding: EdgeInsets.all(14 * scale),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF31364A) : const Color(0xFFD8D8D8),
                       ),
                     ),
-                  ],
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _selectedVehicleId,
+
+                        decoration: InputDecoration(
+                          hintText: 'Escolha um veículo disponível',
+                          hintStyle: TextStyle(
+                            color: isDark ? Colors.white54 : const Color(0xFF858585),
+                          ),
+                          border: InputBorder.none,
+                        ),
+                        items: VehicleService.instance.availableVehicles.map((v) {
+                          return DropdownMenuItem(
+                            value: v.id,
+                            child: Row(
+                              children: [
+                        Text(
+                                  (v.type == VehicleType.moto ? '🏍️' : v.type == VehicleType.carro ? '🚗' : '🚚'),
+                                  style: TextStyle(fontSize: 20 * scale),
+                                ),
+                                SizedBox(width: 8 * scale),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        v.name,
+                                        style: TextStyle(
+                                          fontSize: 16 * scale,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${v.speedPerKm.toStringAsFixed(0)} km/h • ${v.carryCapacity.toStringAsFixed(0)} kg',
+                                        style: TextStyle(
+                                          fontSize: 12 * scale,
+                                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedVehicleId = value),
+                        isExpanded: true,
+                      ),
+                    ),
+                  ),
 
                   SizedBox(height: 20 * scale),
 
@@ -402,45 +398,7 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
     );
   }
 
-  Widget _statusChip(String label, RouteStatus status, double scale) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final selected = _selectedStatus == status;
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedStatus = status),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: EdgeInsets.symmetric(vertical: 12 * scale),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: selected
-                ? LinearGradient(
-                    colors: isDark
-                        ? const [Color(0xFF8B4DDE), Color(0xFFB06CFF)]
-                        : const [Color(0xFFFF8C22), Color(0xFFFF6B00)],
-                  )
-                : null,
-            color: selected ? null : (isDark ? const Color(0xFF1A1D2A) : Colors.white),
-            border: selected
-                ? null
-                : Border.all(
-                    color: isDark ? const Color(0xFF31364A) : const Color(0xFFD8D8D8),
-                  ),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 15 * scale,
-              fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF2A2A2A)),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _pointTile({
     required String label,

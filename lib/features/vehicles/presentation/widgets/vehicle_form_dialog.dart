@@ -22,6 +22,7 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
   late TextEditingController _capacityController;
   late TextEditingController _weightController;
   late VehicleType _selectedType;
+  bool _isAvailable = true;
 
   @override
   void initState() {
@@ -37,6 +38,7 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
       text: widget.vehicle?.weight.toString() ?? '',
     );
     _selectedType = widget.vehicle?.type ?? VehicleType.carro;
+    _isAvailable = widget.vehicle?.isAvailable ?? true;
   }
 
   @override
@@ -252,6 +254,30 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                 contentPadding: EdgeInsets.symmetric(horizontal: 12 * widget.scale, vertical: 10 * widget.scale),
               ),
             ),
+            SizedBox(height: 12 * widget.scale),
+
+            // Availability toggle
+            SwitchListTile(
+              title: Text(
+                'Disponível',
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF1E1E1E),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14 * widget.scale,
+                ),
+              ),
+              subtitle: Text(
+                widget.vehicle?.isAvailable != true ? 'Marque como disponível para usar em rotas' : 'Veículo pronto para uso',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 12 * widget.scale,
+                ),
+              ),
+              value: _isAvailable,
+              onChanged: (value) => setState(() => _isAvailable = value),
+              activeThumbColor: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00),
+              contentPadding: EdgeInsets.zero,
+            ),
           ],
         ),
       ),
@@ -277,6 +303,7 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                     speedPerKm: double.parse(_speedController.text),
                     carryCapacity: double.parse(_capacityController.text),
                     weight: double.parse(_weightController.text),
+                    isAvailable: _isAvailable,
                   )
                 : Vehicle(
                     id: const Uuid().v4(),
@@ -285,6 +312,7 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                     speedPerKm: double.parse(_speedController.text),
                     carryCapacity: double.parse(_capacityController.text),
                     weight: double.parse(_weightController.text),
+                    isAvailable: _isAvailable,
                   );
 
             Navigator.pop(context, vehicle);
