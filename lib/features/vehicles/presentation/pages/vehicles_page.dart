@@ -234,7 +234,6 @@ class _VehiclesPageState extends State<VehiclesPage> {
                               child: VehicleCard(
                                 vehicle: vehicle,
                                 scale: scale,
-                                onSelect: () => _vehicleService.selectVehicle(vehicle),
                                 onEdit: () => _showVehicleForm(vehicle: vehicle),
                                 onDelete: () => _deleteVehicle(vehicle),
                               ),

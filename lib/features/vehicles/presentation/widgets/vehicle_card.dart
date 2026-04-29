@@ -10,14 +10,12 @@ class VehicleCard extends StatelessWidget {
     required this.scale,
     this.onEdit,
     this.onDelete,
-    this.onSelect,
   });
 
   final Vehicle vehicle;
   final double scale;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
-  final VoidCallback? onSelect;
 
   String _getVehicleIcon() {
     return switch (vehicle.type) {
@@ -36,12 +34,6 @@ class VehicleCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF07090E) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: vehicle.isSelected
-            ? Border.all(
-                color: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00),
-                width: 2,
-              )
-            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -83,57 +75,35 @@ class VehicleCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (vehicle.isSelected)
-                Container(
-                  width: 24 * scale,
-                  height: 24 * scale,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: isDark
-                          ? const [Color(0xFF8B4DDE), Color(0xFFB06CFF)]
-                          : const [Color(0xFFFF8C22), Color(0xFFFF6B00)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Icon(Icons.check, color: Colors.white, size: 14 * scale),
-                )
+
             ],
           ),
           SizedBox(height: 8 * scale),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Expanded(
-                child: Text(
-                  '⚡ ${vehicle.speedPerKm.toStringAsFixed(0)} km/h',
-                  style: TextStyle(
-                    fontSize: 11 * scale,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.grey[300] : Colors.grey[700],
-                  ),
+              Text(
+                '⚡ ${vehicle.speedPerKm.toStringAsFixed(0)} km/h',
+                style: TextStyle(
+                  fontSize: 11 * scale,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
                 ),
               ),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      vehicle.isAvailable ? Icons.check_circle : Icons.cancel,
-                      size: 12 * scale,
-                      color: vehicle.isAvailable ? Colors.green : Colors.red,
-                    ),
-                    SizedBox(width: 2 * scale),
-                    Text(
-                      vehicle.isAvailable ? 'Disponível' : 'Indisponível',
-                      style: TextStyle(
-                        fontSize: 10 * scale,
-                        fontWeight: FontWeight.w500,
-                        color: vehicle.isAvailable ? Colors.green : Colors.red,
-                      ),
-                    ),
-                  ],
+              Text(
+                '📦 ${vehicle.carryCapacity.toStringAsFixed(0)} kg',
+                style: TextStyle(
+                  fontSize: 11 * scale,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                ),
+              ),
+              Text(
+                '⚖️ ${vehicle.weight.toStringAsFixed(0)} kg',
+                style: TextStyle(
+                  fontSize: 11 * scale,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
                 ),
               ),
             ],
@@ -162,55 +132,25 @@ class VehicleCard extends StatelessWidget {
 
           Row(
             children: [
-              Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: vehicle.isAvailable ? onSelect : null,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 6 * scale),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        gradient: vehicle.isAvailable
-                          ? LinearGradient(
-                              colors: isDark
-                                  ? const [Color(0xFF8B4DDE), Color(0xFFB06CFF)]
-                                  : const [Color(0xFFFF8C22), Color(0xFFFF6B00)],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            )
-                          : null,
-                        color: vehicle.isAvailable ? null : Colors.grey.withOpacity(0.3),
-                      ),
-                      child: Text(
-                        vehicle.isSelected ? 'SELECIONADO' : 'SELECIONAR',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 11 * scale,
-                          fontWeight: FontWeight.w600,
-                          color: vehicle.isAvailable ? Colors.white : Colors.grey,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 6 * scale),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: vehicle.isAvailable ? onEdit : null,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
-                    decoration: BoxDecoration(
+              const Spacer(),
+              Row(
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onEdit,
                       borderRadius: BorderRadius.circular(8),
-                      color: vehicle.isAvailable ? (isDark ? const Color(0xFF1A1D24) : const Color(0xFFF0F0F0)) : Colors.grey.withOpacity(0.3),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: isDark ? const Color(0xFF1A1D24) : const Color(0xFFF0F0F0),
+                        ),
+                        child: Icon(Icons.edit, size: 14 * scale, color: isDark ? Colors.grey[300] : Colors.grey[700]),
+                      ),
                     ),
-                    child: Icon(Icons.edit, size: 14 * scale, color: vehicle.isAvailable ? (isDark ? Colors.grey[300] : Colors.grey[700]) : Colors.grey),
                   ),
-                ),
+                ]
               ),
               SizedBox(width: 6 * scale),
               Material(
