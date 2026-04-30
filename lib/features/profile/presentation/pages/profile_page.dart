@@ -135,7 +135,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   SizedBox(height: 18 * scale),
                   Text(
-                    'Pagina de Perfil',
+                    'Meu Perfil',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -146,7 +146,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(
                     dateHeader,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      // ignore: deprecated_member_use
+                      color: Colors.white.withOpacity(0.9),
                       fontWeight: FontWeight.w400,
                       fontSize: 18 * scale,
                     ),
@@ -190,7 +191,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
+                              color: Colors.black.withOpacity(0.08),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -217,7 +218,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               isDark: isDark,
                             ),
                             SizedBox(height: 8 * scale),
-                            _actionButton(
+                            _actionButtonOrange(
                               'Configuracoes',
                               scale,
                               isDark: isDark,
@@ -230,9 +231,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               },
                             ),
                             SizedBox(height: 8 * scale),
-                            _actionButton('Ajuda', scale, isDark: isDark),
-                            SizedBox(height: 8 * scale),
-                            _actionButton(
+                            _actionButtonOrange(
                               'Sair',
                               scale,
                               isDark: isDark,
@@ -390,7 +389,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _actionButton(
+  Widget _actionButtonOrange(
     String title,
     double scale, {
     required bool isDark,
@@ -398,10 +397,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }) {
     return SizedBox(
       width: double.infinity,
-      child: OutlinedButton(
+      child: ElevatedButton(
         onPressed: onPressed ?? () {},
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: isDark ? const Color(0xFF49506A) : const Color(0xFF929292)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isDark ? const Color(0xFF8A46DB) : const Color(0xFFFF8A00),
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -410,7 +410,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Text(
           title,
           style: TextStyle(
-            color: isDark ? const Color(0xFFE0E5F4) : const Color(0xFF1D1D1D),
+            color: Colors.white,
             fontSize: 16 * scale,
           ),
         ),
@@ -418,3 +418,4 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+
