@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/data/vehicle_model.dart';
 import '../../../../shared/data/vehicle_service.dart';
+import '../../../../shared/widgets/theme_mode_button.dart';
 import '../widgets/vehicle_card.dart';
 import '../widgets/vehicle_form_dialog.dart';
 
@@ -128,51 +129,31 @@ class _VehiclesPageState extends State<VehiclesPage> {
                   children: [
                     Row(
                       children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context, _vehicleService.selectedVehicle),
-                          child: Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 24 * scale,
-                          ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context, _vehicleService.selectedVehicle),
+                          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                         ),
                         const Spacer(),
-                        Text(
-                          'Veículos',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 20 * scale,
-                          ),
-                        ),
-                        const Spacer(),
-                        SizedBox(width: 24 * scale),
+                        ThemeModeButton(scale: scale),
                       ],
                     ),
-                    SizedBox(height: 12 * scale),
-                    if (_vehicleService.selectedVehicle != null)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Veículo Selecionado',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontWeight: FontWeight.w400,
-                              fontSize: 12 * scale,
-                            ),
-                          ),
-                          SizedBox(height: 4 * scale),
-                          Text(
-                            _vehicleService.selectedVehicle!.name,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16 * scale,
-                            ),
-                          ),
-                        ],
+                    SizedBox(height: 8 * scale),
+                    Text(
+                      'Veículos',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 34 * scale,
                       ),
+                    ),
+                    SizedBox(height: 3 * scale),
+                    Text(
+                      'Gerencie seus veículos',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        fontSize: 16 * scale,
+                      ),
+                    ),
                   ],
                 ),
               ),

@@ -10,6 +10,7 @@ import '../../../../shared/data/route_service.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../../../../shared/widgets/user_header_avatar.dart';
+import '../../../../shared/widgets/navigation_utils.dart';
 import 'create_route_page.dart';
 
 class RoutesPage extends StatefulWidget {
@@ -24,7 +25,7 @@ class _RoutesPageState extends State<RoutesPage> {
 
   String _formatBrasiliaDate() {
     final brasiliaNow = DateTime.now().toUtc().add(const Duration(hours: -3));
-    final raw = DateFormat("EEE, d 'de' MMMM", 'pt_BR').format(brasiliaNow);
+    final raw = DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
     if (raw.isEmpty) return '';
     final withoutDot = raw.replaceAll('.', '');
     return withoutDot[0].toUpperCase() + withoutDot.substring(1);
@@ -296,24 +297,16 @@ class _RoutesPageState extends State<RoutesPage> {
         currentTab: FastlapTab.rotas,
         onTabSelected: (tab) {
           if (tab == FastlapTab.inicio) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const HomePage()),
-            );
+            Navigator.of(context).pushReplacement(noAnimationRoute(const HomePage()));
           }
           if (tab == FastlapTab.mapa) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const MapPage()),
-            );
+            Navigator.of(context).pushReplacement(noAnimationRoute(const MapPage()));
           }
           if (tab == FastlapTab.historico) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const HistoryPage()),
-            );
+            Navigator.of(context).pushReplacement(noAnimationRoute(const HistoryPage()));
           }
           if (tab == FastlapTab.perfil) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
-            );
+            Navigator.of(context).pushReplacement(noAnimationRoute(const ProfilePage()));
           }
         },
       ),

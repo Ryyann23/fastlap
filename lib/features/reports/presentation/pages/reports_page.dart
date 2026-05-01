@@ -83,7 +83,7 @@ class _ReportsPageState extends State<ReportsPage> {
       ['Data/Hora', 'Ação', 'Descrição', 'Entidade', 'ID Entidade', 'Usuário'],
       ...entries.map(
         (e) => [
-          DateFormat("dd/MM/yyyy HH:mm", 'pt_BR').format(e.createdAt),
+          DateFormat('dd/MM/yyyy HH:mm', 'pt_BR').format(e.createdAt),
           _actionLabel(e.action),
           e.description,
           e.entityType,
@@ -116,8 +116,8 @@ class _ReportsPageState extends State<ReportsPage> {
 
     pdf.addPage(
       pw.MultiPage(
-        pageTheme: pw.PageTheme(
-          margin: const pw.EdgeInsets.all(24),
+        pageTheme: const pw.PageTheme(
+          margin: pw.EdgeInsets.all(24),
         ),
         build: (context) => [
           pw.Container(
@@ -138,7 +138,7 @@ class _ReportsPageState extends State<ReportsPage> {
                   ),
                 ),
                 pw.Text(
-                  DateFormat("dd/MM/yyyy HH:mm", 'pt_BR').format(DateTime.now()),
+                  DateFormat('dd/MM/yyyy HH:mm', 'pt_BR').format(DateTime.now()),
                   style: const pw.TextStyle(color: PdfColors.white, fontSize: 12),
                 ),
               ],
@@ -167,7 +167,7 @@ class _ReportsPageState extends State<ReportsPage> {
             data: entries
                 .map(
                   (e) => [
-                    DateFormat("dd/MM/yyyy HH:mm", 'pt_BR').format(e.createdAt),
+                    DateFormat('dd/MM/yyyy HH:mm', 'pt_BR').format(e.createdAt),
                     _actionLabel(e.action),
                     e.description,
                     '${e.entityType} (${e.entityId})',
