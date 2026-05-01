@@ -1,164 +1,238 @@
-import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../shared/data/api_service.dart';
 
 class AuthService {
   static const String _usersKey = 'fastlap_users';
   static const String _activeUserKey = 'fastlap_active_user';
 
-  Future<LocalAuthUser?> getActiveUser() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_activeUserKey);
-      if (raw == null || raw.isEmpty) return null;
+  //==============================//
+  //      register - BACKEND      //
+  //==============================//
+  Future<AuthResult> register({
+    required String name,
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    // Tentar registrar no backend
+    final response = await ApiService.post(
+      '/auth/register',
+      body: {
+        'name': name,
+        'username': username,
+        'email': email,
+        'password': password,
+      },
+    );
 
-      final map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
-      return LocalAuthUser.fromMap(map);
-    } catch (_) {
-      return null;
+    if (response.ok) {
+      // Salvar token e usuário localmente
+      final data = response.dataAsMap;
+      if (data != null) {
+        final accessToken = data['accessToken'] as String?;
+        final user = data['user'] as Map<String, dynamic>?;
+
+        if (accessToken != null) {
+          await ApiService.setAuthToken(accessToken);
+        }
+
+        if (user != null) {
+          await _saveActiveUser(Map<String, dynamic>.from(user));
+        }
+
+        return AuthResult.success(
+          token: accessToken ?? 'token-recebido',
+          userName: user?['name']?.toString() ?? name,
+        );
+      }
+      return AuthResult.success(token: 'token-recebido', userName: name);
     }
+
+    // Se falhar, tentar salvar localmente (fallback)
+    return _registerLocal(name: name, username: username, email: email, password: password);
   }
 
+  //==============================//
+  //       login - BACKEND       //
+  //==============================//
+  Future<AuthResult> login({required String email, required String password}) async {
+    // Tentar login no backend
+    final response = await ApiService.post(
+      '/auth/login',
+      body: {
+        'email': email,
+        'password': password,
+      },
+    );
+
+    if (response.ok) {
+      final data = response.dataAsMap;
+      if (data != null) {
+        final accessToken = data['accessToken'] as String?;
+        final user = data['user'] as Map<String, dynamic>?;
+
+        if (accessToken != null) {
+          await ApiService.setAuthToken(accessToken);
+        }
+
+        if (user != null) {
+          await _saveActiveUser(Map<String, dynamic>.from(user));
+        }
+
+        return AuthResult.success(
+          token: accessToken ?? 'token-recebido',
+          userName: user?['name']?.toString() ?? '',
+        );
+      }
+      return AuthResult.success(token: 'token-recebido', userName: email);
+    }
+
+    // Se falhar, tentar login localmente (fallback)
+    return _loginLocal(email: email, password: password);
+  }
+
+  //==============================//
+  //      logout - BACKEND       //
+  //==============================//
   Future<void> logout() async {
+    try {
+      // Notificar backend (opcional)
+      await ApiService.post('/auth/logout');
+    } catch (_) {
+      // Ignora erro de rede
+    }
+
+    // Limpar token local
+    await ApiService.clearAuthToken();
+
+    // Limpar usuário ativo
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_activeUserKey);
   }
 
+  //==============================//
+  //     getActiveUser         //
+  //==============================//
+  Future<LocalAuthUser?> getActiveUser() async {
+    // Primeiro tenta buscar do backend
+    final token = await ApiService.getAuthToken();
+    if (token != null) {
+      final response = await ApiService.get('/auth/me', token: token);
+      if (response.ok && response.dataAsMap != null) {
+        return LocalAuthUser.fromMap(response.dataAsMap!);
+      }
+    }
+
+    // Fallback: buscar localmente
+    return _getActiveUserLocal();
+  }
+
+  //==============================//
+  //    updateProfile        //
+  //==============================//
   Future<AuthResult> updateProfile({
     required String name,
     required String username,
     required String email,
   }) async {
-    try {
-      final activeUser = await getActiveUser();
-      if (activeUser == null) {
-        return const AuthResult.failure('Nenhum usuario logado.');
-      }
+    final token = await ApiService.getAuthToken();
+    if (token == null) {
+      return const AuthResult.failure('Nenhum usuário logado.');
+    }
 
-      final users = await _readUsers();
-      final normalizedEmail = email.trim().toLowerCase();
-      final normalizedUsername = username.trim().toLowerCase();
-
-      final emailTaken = users.any((u) {
-        final sameUser = _isSameUser(u, activeUser);
-        return !sameUser && (u['email'] ?? '').toString().toLowerCase() == normalizedEmail;
-      });
-      if (emailTaken) {
-        return const AuthResult.failure('Esse e-mail ja esta cadastrado.');
-      }
-
-      final usernameTaken = users.any((u) {
-        final sameUser = _isSameUser(u, activeUser);
-        return !sameUser && (u['username'] ?? '').toString().toLowerCase() == normalizedUsername;
-      });
-      if (usernameTaken) {
-        return const AuthResult.failure('Esse nome de usuario ja esta em uso.');
-      }
-
-      final updatedUser = activeUser.toMap()
-        ..['name'] = name.trim()
-        ..['username'] = username.trim()
-        ..['email'] = normalizedEmail;
-
-      await _replaceAndPersistUser(
-        activeUser: activeUser,
-        users: users,
-        updatedUser: updatedUser,
+    // Atualizar no backend
+    final userId = await _getActiveUserId();
+    if (userId != null) {
+      final response = await ApiService.put(
+        '/users/$userId',
+        body: {
+          'name': name,
+          'username': username,
+          'email': email,
+        },
+        token: token,
       );
 
-      return AuthResult.success(token: 'local-session', userName: name.trim());
-    } catch (_) {
-      return const AuthResult.failure('Erro ao atualizar perfil local.');
+      if (response.ok) {
+        await _updateActiveUserLocal(name: name, username: username, email: email);
+        return AuthResult.success(token: token, userName: name);
+      }
     }
+
+    return const AuthResult.failure('Erro ao atualizar perfil.');
   }
 
+  //==============================//
+  //    changePassword      //
+  //==============================//
   Future<AuthResult> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
-    try {
-      final activeUser = await getActiveUser();
-      if (activeUser == null) {
-        return const AuthResult.failure('Nenhum usuario logado.');
-      }
+    final token = await ApiService.getAuthToken();
+    if (token == null) {
+      return const AuthResult.failure('Nenhum usuário logado.');
+    }
 
-      if (currentPassword != activeUser.password) {
-        return const AuthResult.failure('Senha atual incorreta.');
-      }
-
-      if (newPassword.length < 6) {
-        return const AuthResult.failure('A nova senha precisa ter pelo menos 6 caracteres.');
-      }
-
-      final users = await _readUsers();
-      final updatedUser = activeUser.toMap()..['password'] = newPassword;
-
-      await _replaceAndPersistUser(
-        activeUser: activeUser,
-        users: users,
-        updatedUser: updatedUser,
+    // Atualizar no backend
+    final userId = await _getActiveUserId();
+    if (userId != null) {
+      final response = await ApiService.put(
+        '/users/$userId/password',
+        body: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+        token: token,
       );
 
-      return const AuthResult.success(token: 'local-session', userName: '');
-    } catch (_) {
-      return const AuthResult.failure('Erro ao atualizar senha local.');
+      if (response.ok) {
+        return AuthResult.success(token: token, userName: '');
+      }
+
+      return AuthResult.failure(response.error ?? 'Erro ao alterar senha.');
+    }
+
+    return const AuthResult.failure('Erro ao alterar senha.');
+  }
+
+  //==============================//
+  //   updateAvatar          //
+  //==============================//
+  Future<void> updateAvatar(String? avatarBase64) async {
+    final token = await ApiService.getAuthToken();
+    if (token == null) return;
+
+    final userId = await _getActiveUserId();
+    if (userId != null) {
+      await ApiService.put(
+        '/users/$userId',
+        body: {'avatar_url': avatarBase64},
+        token: token,
+      );
     }
   }
 
-  Future<void> updateAvatar(String? avatarBase64) async {
-    final activeUser = await getActiveUser();
-    if (activeUser == null) return;
-
-    final users = await _readUsers();
-    final updatedUser = activeUser.toMap()..['avatarBase64'] = avatarBase64;
-
-    await _replaceAndPersistUser(
-      activeUser: activeUser,
-      users: users,
-      updatedUser: updatedUser,
-    );
-  }
-
+  //==============================//
+  //   deleteProfile         //
+  //==============================//
   Future<void> deleteProfile() async {
-    final activeUser = await getActiveUser();
-    if (activeUser == null) return;
+    final token = await ApiService.getAuthToken();
+    if (token != null) {
+      final userId = await _getActiveUserId();
+      if (userId != null) {
+        await ApiService.delete('/users/$userId', token: token);
+      }
+    }
 
-    final users = await _readUsers();
-    users.removeWhere((u) => _isSameUser(u, activeUser));
-    await _writeUsers(users);
     await logout();
   }
 
-  Future<AuthResult> login({required String email, required String password}) async {
-    try {
-      final users = await _readUsers();
-      final identifier = email.trim().toLowerCase();
+  //==============================//
+  //   MÉTODOS LOCAIS (fallback) //
+  //==============================//
 
-      final user = users.where((u) {
-        final savedEmail = (u['email'] ?? '').toString().toLowerCase();
-        final savedUsername = (u['username'] ?? '').toString().toLowerCase();
-        final savedPassword = (u['password'] ?? '').toString();
-
-        return (savedEmail == identifier || savedUsername == identifier) &&
-            savedPassword == password;
-      }).firstOrNull;
-
-      if (user == null) {
-        return const AuthResult.failure('Usuario ou senha invalidos.');
-      }
-
-      await _saveActiveUser(user);
-
-      return AuthResult.success(
-        token: 'local-session',
-        userName: user['name']?.toString() ?? '',
-      );
-    } catch (_) {
-      return const AuthResult.failure('Erro ao ler os dados locais de login.');
-    }
-  }
-
-  Future<AuthResult> register({
+  Future<AuthResult> _registerLocal({
     required String name,
     required String username,
     required String email,
@@ -173,14 +247,14 @@ class AuthService {
         (u) => (u['email'] ?? '').toString().toLowerCase() == normalizedEmail,
       );
       if (emailExists) {
-        return const AuthResult.failure('Esse e-mail ja esta cadastrado.');
+        return const AuthResult.failure('Esse e-mail já está cadastrado.');
       }
 
       final usernameExists = users.any(
         (u) => (u['username'] ?? '').toString().toLowerCase() == normalizedUsername,
       );
       if (usernameExists) {
-        return const AuthResult.failure('Esse nome de usuario ja esta em uso.');
+        return const AuthResult.failure('Esse nome de usuário já está em uso.');
       }
 
       final user = <String, dynamic>{
@@ -197,13 +271,82 @@ class AuthService {
       await _writeUsers(users);
       await _saveActiveUser(user);
 
+      return AuthResult.success(token: 'local-session', userName: name.trim());
+    } catch (_) {
+      return const AuthResult.failure('Erro ao salvar os dados locais.');
+    }
+  }
+
+  Future<AuthResult> _loginLocal({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final users = await _readUsers();
+      final identifier = email.trim().toLowerCase();
+
+      final user = users.where((u) {
+        final savedEmail = (u['email'] ?? '').toString().toLowerCase();
+        final savedUsername = (u['username'] ?? '').toString().toLowerCase();
+        final savedPassword = (u['password'] ?? '').toString();
+
+        return (savedEmail == identifier || savedUsername == identifier) &&
+            savedPassword == password;
+      }).firstOrNull;
+
+      if (user == null) {
+        return const AuthResult.failure('Usuário ou senha inválidos.');
+      }
+
+      await _saveActiveUser(user);
+
       return AuthResult.success(
         token: 'local-session',
         userName: user['name']?.toString() ?? '',
       );
     } catch (_) {
-      return const AuthResult.failure('Erro ao salvar os dados locais de cadastro.');
+      return const AuthResult.failure('Erro ao fazer login local.');
     }
+  }
+
+  Future<LocalAuthUser?> _getActiveUserLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_activeUserKey);
+      if (raw == null || raw.isEmpty) return null;
+
+      final map = Map<String, dynamic>.from(
+        _decodeJson(raw) as Map,
+      );
+      return LocalAuthUser.fromMap(map);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveActiveUser(Map<String, dynamic> user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_activeUserKey, _encodeJson(user));
+  }
+
+  Future<void> _updateActiveUserLocal({
+    required String name,
+    required String username,
+    required String email,
+  }) async {
+    final user = await _getActiveUserLocal();
+    if (user != null) {
+      final updated = user.toMap()
+        ..['name'] = name
+        ..['username'] = username
+        ..['email'] = email;
+      await _saveActiveUser(updated);
+    }
+  }
+
+  Future<String?> _getActiveUserId() async {
+    final user = await getActiveUser();
+    return user?.id;
   }
 
   Future<List<Map<String, dynamic>>> _readUsers() async {
@@ -211,49 +354,33 @@ class AuthService {
     final raw = prefs.getString(_usersKey);
     if (raw == null || raw.isEmpty) return <Map<String, dynamic>>[];
 
-    final decoded = jsonDecode(raw) as List<dynamic>;
+    final decoded = _decodeJson(raw) as List<dynamic>;
     return decoded.map((item) => Map<String, dynamic>.from(item as Map)).toList();
   }
 
   Future<void> _writeUsers(List<Map<String, dynamic>> users) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_usersKey, jsonEncode(users));
+    await prefs.setString(_usersKey, _encodeJson(users));
   }
 
-  Future<void> _saveActiveUser(Map<String, dynamic> user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_activeUserKey, jsonEncode(user));
+  String _encodeJson(dynamic data) {
+    return data.toString();
   }
 
-  Future<void> _replaceAndPersistUser({
-    required LocalAuthUser activeUser,
-    required List<Map<String, dynamic>> users,
-    required Map<String, dynamic> updatedUser,
-  }) async {
-    final index = users.indexWhere((u) => _isSameUser(u, activeUser));
-    if (index >= 0) {
-      users[index] = updatedUser;
-    } else {
-      users.add(updatedUser);
-    }
-
-    await _writeUsers(users);
-    await _saveActiveUser(updatedUser);
-  }
-
-  bool _isSameUser(Map<String, dynamic> map, LocalAuthUser user) {
-    final mapId = (map['id'] ?? '').toString();
-    if (user.id.isNotEmpty && mapId.isNotEmpty) {
-      return mapId == user.id;
-    }
-
-    final mapEmail = (map['email'] ?? '').toString().toLowerCase();
-    final mapCreatedAt = (map['createdAt'] ?? '').toString();
-    return mapEmail == user.email.toLowerCase() && mapCreatedAt == user.createdAt.toIso8601String();
+  dynamic _decodeJson(String data) {
+    return data;
   }
 }
 
+//==============================//
+//      AuthResult            //
+//==============================//
 class AuthResult {
+  final bool ok;
+  final String? message;
+  final String? token;
+  final String? userName;
+
   const AuthResult._({
     required this.ok,
     this.message,
@@ -266,24 +393,12 @@ class AuthResult {
 
   const AuthResult.failure(String message)
       : this._(ok: false, message: message);
-
-  final bool ok;
-  final String? message;
-  final String? token;
-  final String? userName;
 }
 
+//==============================//
+//      LocalAuthUser          //
+//==============================//
 class LocalAuthUser {
-  const LocalAuthUser({
-    required this.id,
-    required this.name,
-    required this.username,
-    required this.email,
-    required this.password,
-    required this.createdAt,
-    required this.avatarBase64,
-  });
-
   final String id;
   final String name;
   final String username;
@@ -291,6 +406,16 @@ class LocalAuthUser {
   final String password;
   final DateTime createdAt;
   final String? avatarBase64;
+
+  const LocalAuthUser({
+    required this.id,
+    required this.name,
+    required this.username,
+    required this.email,
+    required this.password,
+    required this.createdAt,
+    this.avatarBase64,
+  });
 
   factory LocalAuthUser.fromMap(Map<String, dynamic> map) {
     return LocalAuthUser(
