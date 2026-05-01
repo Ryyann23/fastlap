@@ -228,10 +228,17 @@ class _RoutesPageState extends State<RoutesPage> {
                   padding: EdgeInsets.fromLTRB(horizontalPadding, 0, horizontalPadding, 12 * scale),
                   child: GestureDetector(
                     onTap: () async {
-                      final result = await Navigator.of(context).push<bool>(
+                      final result = await Navigator.of(context).push<RouteStatus?>(
                         MaterialPageRoute(builder: (_) => const CreateRoutePage()),
                       );
-                      if (result == true && mounted) setState(() {});
+                      if (result != null && mounted) {
+                        setState(() {
+                          // Se a rota foi criada como agendada, vai para a aba de agendadas
+                          if (result == RouteStatus.agendada) {
+                            selectedTab = 1;
+                          }
+                        });
+                      }
                     },
                     child: Container(
                       width: double.infinity,

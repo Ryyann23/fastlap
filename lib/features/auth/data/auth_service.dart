@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../shared/data/audit_log_service.dart';
+
 class AuthService {
   static const String _usersKey = 'fastlap_users';
   static const String _activeUserKey = 'fastlap_active_user';
@@ -20,8 +22,17 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    final activeUser = await getActiveUser();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_activeUserKey);
+
+    await AuditLogService.instance.addEntry(
+      action: AuditActionType.logout,
+      description: 'Logout realizado',
+      entityType: 'auth',
+      entityId: activeUser?.id ?? 'unknown',
+      userName: activeUser?.name,
+    );
   }
 
   Future<AuthResult> updateProfile({
@@ -148,6 +159,14 @@ class AuthService {
       }
 
       await _saveActiveUser(user);
+
+      await AuditLogService.instance.addEntry(
+        action: AuditActionType.login,
+        description: 'Login realizado',
+        entityType: 'auth',
+        entityId: (user['id'] ?? '').toString(),
+        userName: user['name']?.toString(),
+      );
 
       return AuthResult.success(
         token: 'local-session',

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
+import 'audit_log_service.dart';
 import 'vehicle_model.dart';
 
 class VehicleService extends ChangeNotifier {
@@ -43,25 +44,67 @@ class VehicleService extends ChangeNotifier {
   void addVehicle(Vehicle vehicle) {
     _vehicles.add(vehicle);
     notifyListeners();
+
+    AuditLogService.instance.addEntry(
+      action: AuditActionType.createVehicle,
+      description: 'Veículo criado: ${vehicle.name}',
+      entityType: 'vehicle',
+      entityId: vehicle.id,
+      metadata: {
+        'type': vehicle.type.name,
+        'speedPerKm': vehicle.speedPerKm,
+        'carryCapacity': vehicle.carryCapacity,
+      },
+    );
   }
 
   void updateVehicle(Vehicle vehicle) {
     final index = _vehicles.indexWhere((v) => v.id == vehicle.id);
     if (index != -1) {
+      final oldVehicle = _vehicles[index];
       _vehicles[index] = vehicle;
       if (_selectedVehicle?.id == vehicle.id) {
         _selectedVehicle = vehicle;
       }
       notifyListeners();
+
+      AuditLogService.instance.addEntry(
+        action: AuditActionType.updateVehicle,
+        description: 'Veículo atualizado: ${vehicle.name}',
+        entityType: 'vehicle',
+        entityId: vehicle.id,
+        metadata: {
+          'oldName': oldVehicle.name,
+          'newName': vehicle.name,
+          'type': vehicle.type.name,
+          'speedPerKm': vehicle.speedPerKm,
+          'carryCapacity': vehicle.carryCapacity,
+          'isAvailable': vehicle.isAvailable,
+        },
+      );
     }
   }
 
   void removeVehicle(String vehicleId) {
-    _vehicles.removeWhere((v) => v.id == vehicleId);
+    final index = _vehicles.indexWhere((v) => v.id == vehicleId);
+    if (index == -1) return;
+
+    final vehicle = _vehicles[index];
+    _vehicles.removeAt(index);
     if (_selectedVehicle?.id == vehicleId) {
       _selectedVehicle = null;
     }
     notifyListeners();
+
+    AuditLogService.instance.addEntry(
+      action: AuditActionType.deleteVehicle,
+      description: 'Veículo removido: ${vehicle.name}',
+      entityType: 'vehicle',
+      entityId: vehicle.id,
+      metadata: {
+        'type': vehicle.type.name,
+      },
+    );
   }
 
   void selectVehicle(Vehicle vehicle) {
