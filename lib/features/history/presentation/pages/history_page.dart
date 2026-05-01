@@ -10,6 +10,7 @@ import '../../../../shared/data/route_service.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../../../../shared/widgets/user_header_avatar.dart';
+import '../../../../shared/widgets/navigation_utils.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -39,7 +40,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
   String _formatBrasiliaDateHeader() {
     final brasiliaNow = DateTime.now().toUtc().add(const Duration(hours: -3));
-    final raw = DateFormat("EEE, d 'de' MMMM", 'pt_BR').format(brasiliaNow);
+    final raw = DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
     if (raw.isEmpty) return '';
     final withoutDot = raw.replaceAll('.', '');
     return withoutDot[0].toUpperCase() + withoutDot.substring(1);
@@ -186,82 +187,7 @@ class _HistoryPageState extends State<HistoryPage> {
                           },
                         ),
                 ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    6 * scale,
-                    horizontalPadding,
-                    10 * scale,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setState(() => _selectedDate = null);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFB88649),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: EdgeInsets.symmetric(vertical: 12 * scale),
-                          ),
-                          child: Text(
-                            'Ver Tudo',
-                            style: TextStyle(
-                              color: isDark ? Colors.white : const Color(0xFF9B6E35),
-                              fontSize: 16 * scale,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 10 * scale),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            final now = DateTime.now().toUtc().add(const Duration(hours: -3));
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _selectedDate ?? now,
-                              firstDate: now.subtract(const Duration(days: 90)),
-                              lastDate: now,
-                              locale: const Locale('pt', 'BR'),
-                            );
-                            if (picked != null) {
-                              setState(() {
-                                _selectedDate = DateTime(picked.year, picked.month, picked.day);
-                              });
-                            }
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFB88649),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: EdgeInsets.symmetric(vertical: 12 * scale),
-                          ),
-                          icon: Icon(
-                            Icons.filter_alt_outlined,
-                            color: isDark ? Colors.white : const Color(0xFF9B6E35),
-                            size: 20 * scale,
-                          ),
-                          label: Text(
-                            'Filtrar por Data',
-                            style: TextStyle(
-                              color: isDark ? Colors.white : const Color(0xFF9B6E35),
-                              fontSize: 16 * scale,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+
               ],
             ),
           ),
@@ -272,24 +198,16 @@ class _HistoryPageState extends State<HistoryPage> {
         currentTab: FastlapTab.historico,
         onTabSelected: (tab) {
           if (tab == FastlapTab.inicio) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const HomePage()),
-            );
+            Navigator.of(context).pushReplacement(noAnimationRoute(const HomePage()));
           }
           if (tab == FastlapTab.rotas) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const RoutesPage()),
-            );
+            Navigator.of(context).pushReplacement(noAnimationRoute(const RoutesPage()));
           }
           if (tab == FastlapTab.mapa) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const MapPage()),
-            );
+            Navigator.of(context).pushReplacement(noAnimationRoute(const MapPage()));
           }
           if (tab == FastlapTab.perfil) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
-            );
+            Navigator.of(context).pushReplacement(noAnimationRoute(const ProfilePage()));
           }
         },
       ),

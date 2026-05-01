@@ -80,14 +80,13 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
       return;
     }
 
-    RouteService.instance.createRoute(
+    final createdRoute = RouteService.instance.createRoute(
       name: _nameController.text.trim(),
       selectedPoints: _selectedPoints,
-      status: RouteStatus.ativa,
       vehicleId: _selectedVehicleId!,
     );
 
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(createdRoute.status);
   }
 
   @override

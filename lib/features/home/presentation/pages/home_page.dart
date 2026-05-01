@@ -5,9 +5,12 @@ import '../../../auth/data/auth_service.dart';
 import '../../../history/presentation/pages/history_page.dart';
 import '../../../map/presentation/pages/map_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
+import '../../../profile/presentation/pages/settings_page.dart';
 import '../../../routes/presentation/pages/routes_page.dart';
 import '../../../routes/presentation/pages/create_route_page.dart';
 import '../../../vehicles/presentation/pages/vehicles_page.dart';
+import '../../../reports/presentation/pages/reports_page.dart';
+import '../../../../shared/data/route_model.dart';
 import '../../../../shared/data/route_service.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
@@ -126,7 +129,7 @@ class _HomePageState extends State<HomePage> {
                     dateTimeText,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.9),
-                      fontWeight: FontWeight.w400,
+                      fontWeight: FontWeight.w700,
                       fontSize: 18 * scale,
                     ),
                   ),
@@ -212,10 +215,10 @@ class _HomePageState extends State<HomePage> {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(32),
                         onTap: () async {
-                          final result = await Navigator.of(context).push<bool>(
+                          final result = await Navigator.of(context).push<RouteStatus?>(
                             MaterialPageRoute(builder: (_) => const CreateRoutePage()),
                           );
-                          if (result == true && mounted) setState(() {});
+                          if (result != null && mounted) setState(() {});
                         },
                         child: Row(
                           children: [
@@ -282,12 +285,12 @@ class _HomePageState extends State<HomePage> {
                       GestureDetector(
                         onTap: () async {
                           final result = await Navigator.of(context).push<dynamic>(
-                            MaterialPageRoute(builder: (_) => const VehiclesPage()),
+                            MaterialPageRoute(builder: (_) => const SettingsPage()),
                           );
                           if (result != null && mounted) setState(() {});
                         },
                         child: QuickActionCard(
-                          title: 'Entregas',
+                          title: 'Configurações',
                           icon: Icons.inventory_2_outlined,
                           scale: scale,
                         ),
@@ -308,7 +311,7 @@ class _HomePageState extends State<HomePage> {
                       GestureDetector(
                         onTap: () async {
                           final result = await Navigator.of(context).push<dynamic>(
-                            MaterialPageRoute(builder: (_) => const VehiclesPage()),
+                            MaterialPageRoute(builder: (_) => const ReportsPage()),
                           );
                           if (result != null && mounted) setState(() {});
                         },
@@ -356,3 +359,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
