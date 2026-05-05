@@ -52,7 +52,8 @@ class AuthService {
 
       final emailTaken = users.any((u) {
         final sameUser = _isSameUser(u, activeUser);
-        return !sameUser && (u['email'] ?? '').toString().toLowerCase() == normalizedEmail;
+        return !sameUser &&
+            (u['email'] ?? '').toString().toLowerCase() == normalizedEmail;
       });
       if (emailTaken) {
         return const AuthResult.failure('Esse e-mail ja esta cadastrado.');
@@ -60,7 +61,9 @@ class AuthService {
 
       final usernameTaken = users.any((u) {
         final sameUser = _isSameUser(u, activeUser);
-        return !sameUser && (u['username'] ?? '').toString().toLowerCase() == normalizedUsername;
+        return !sameUser &&
+            (u['username'] ?? '').toString().toLowerCase() ==
+                normalizedUsername;
       });
       if (usernameTaken) {
         return const AuthResult.failure('Esse nome de usuario ja esta em uso.');
@@ -98,7 +101,8 @@ class AuthService {
       }
 
       if (newPassword.length < 6) {
-        return const AuthResult.failure('A nova senha precisa ter pelo menos 6 caracteres.');
+        return const AuthResult.failure(
+            'A nova senha precisa ter pelo menos 6 caracteres.');
       }
 
       final users = await _readUsers();
@@ -140,7 +144,8 @@ class AuthService {
     await logout();
   }
 
-  Future<AuthResult> login({required String email, required String password}) async {
+  Future<AuthResult> login(
+      {required String email, required String password}) async {
     try {
       final users = await _readUsers();
       final identifier = email.trim().toLowerCase();
@@ -196,7 +201,9 @@ class AuthService {
       }
 
       final usernameExists = users.any(
-        (u) => (u['username'] ?? '').toString().toLowerCase() == normalizedUsername,
+        (u) =>
+            (u['username'] ?? '').toString().toLowerCase() ==
+            normalizedUsername,
       );
       if (usernameExists) {
         return const AuthResult.failure('Esse nome de usuario ja esta em uso.');
@@ -221,7 +228,8 @@ class AuthService {
         userName: user['name']?.toString() ?? '',
       );
     } catch (_) {
-      return const AuthResult.failure('Erro ao salvar os dados locais de cadastro.');
+      return const AuthResult.failure(
+          'Erro ao salvar os dados locais de cadastro.');
     }
   }
 
@@ -231,7 +239,9 @@ class AuthService {
     if (raw == null || raw.isEmpty) return <Map<String, dynamic>>[];
 
     final decoded = jsonDecode(raw) as List<dynamic>;
-    return decoded.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+    return decoded
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
   }
 
   Future<void> _writeUsers(List<Map<String, dynamic>> users) async {
@@ -268,7 +278,8 @@ class AuthService {
 
     final mapEmail = (map['email'] ?? '').toString().toLowerCase();
     final mapCreatedAt = (map['createdAt'] ?? '').toString();
-    return mapEmail == user.email.toLowerCase() && mapCreatedAt == user.createdAt.toIso8601String();
+    return mapEmail == user.email.toLowerCase() &&
+        mapCreatedAt == user.createdAt.toIso8601String();
   }
 }
 
@@ -318,7 +329,8 @@ class LocalAuthUser {
       username: (map['username'] ?? '').toString(),
       email: (map['email'] ?? '').toString(),
       password: (map['password'] ?? '').toString(),
-      createdAt: DateTime.tryParse((map['createdAt'] ?? '').toString()) ?? DateTime.now(),
+      createdAt: DateTime.tryParse((map['createdAt'] ?? '').toString()) ??
+          DateTime.now(),
       avatarBase64: map['avatarBase64']?.toString(),
     );
   }

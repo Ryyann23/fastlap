@@ -32,7 +32,7 @@ class FastlapBottomBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 70,
+          height: (64 * scale).clamp(54.0, 70.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -97,8 +97,10 @@ class _BottomItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeColor = isDark ? const Color(0xFFB06CFF) : const Color(0xFFE86710);
-    final inactiveColor = isDark ? const Color(0xFFC8CCD8) : const Color(0xFF3F3F3F);
+    final activeColor =
+        isDark ? const Color(0xFFB06CFF) : const Color(0xFFE86710);
+    final inactiveColor =
+        isDark ? const Color(0xFFC8CCD8) : const Color(0xFF3F3F3F);
 
     return InkWell(
       onTap: onTap,
@@ -116,8 +118,10 @@ class _BottomItem extends StatelessWidget {
             SizedBox(height: 2 * scale),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 13 * scale,
+                fontSize: 12 * scale,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                 color: isActive ? activeColor : inactiveColor,
               ),

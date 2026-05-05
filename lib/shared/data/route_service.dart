@@ -4,7 +4,6 @@ import 'caxias_pois.dart';
 import 'route_model.dart';
 import 'audit_log_service.dart';
 
-
 /// Serviço singleton para gerenciar rotas do app
 class RouteService extends ChangeNotifier {
   RouteService._();
@@ -25,12 +24,18 @@ class RouteService extends ChangeNotifier {
   List<AppRoute> get scheduledRoutes =>
       _routes.where((r) => r.status == RouteStatus.agendada).toList();
 
-  List<AppRoute> get completedRoutes =>
-      _routes.where((r) => r.status == RouteStatus.concluida || r.status == RouteStatus.cancelada).toList();
+  List<AppRoute> get completedRoutes => _routes
+      .where((r) =>
+          r.status == RouteStatus.concluida ||
+          r.status == RouteStatus.cancelada)
+      .toList();
 
   /// Rotas não-finalizadas (ativas, pausadas, agendadas)
-  List<AppRoute> get currentRoutes =>
-      _routes.where((r) => r.status != RouteStatus.concluida && r.status != RouteStatus.cancelada).toList();
+  List<AppRoute> get currentRoutes => _routes
+      .where((r) =>
+          r.status != RouteStatus.concluida &&
+          r.status != RouteStatus.cancelada)
+      .toList();
 
   /// Retorna a rota ativa atual (se existir)
   AppRoute? get activeRoute {
@@ -78,8 +83,12 @@ class RouteService extends ChangeNotifier {
 
     final isScheduled = statusForNewRoute == RouteStatus.agendada;
     AuditLogService.instance.addEntry(
-      action: isScheduled ? AuditActionType.scheduleRoute : AuditActionType.createRoute,
-      description: isScheduled ? 'Rota agendada: ${route.name}' : 'Rota criada: ${route.name}',
+      action: isScheduled
+          ? AuditActionType.scheduleRoute
+          : AuditActionType.createRoute,
+      description: isScheduled
+          ? 'Rota agendada: ${route.name}'
+          : 'Rota criada: ${route.name}',
       entityType: 'route',
       entityId: route.id,
       metadata: {
@@ -98,7 +107,8 @@ class RouteService extends ChangeNotifier {
     final route = _routes.firstWhere((r) => r.id == routeId);
     final previousStatus = route.status;
     route.status = newStatus;
-    if (newStatus == RouteStatus.concluida || newStatus == RouteStatus.cancelada) {
+    if (newStatus == RouteStatus.concluida ||
+        newStatus == RouteStatus.cancelada) {
       route.completedAt = DateTime.now();
     }
     notifyListeners();

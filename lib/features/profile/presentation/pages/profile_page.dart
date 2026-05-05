@@ -12,6 +12,7 @@ import '../../../home/presentation/pages/home_page.dart';
 import '../../../map/presentation/pages/map_page.dart';
 import '../../../routes/presentation/pages/routes_page.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import 'settings_page.dart';
 
@@ -68,7 +69,8 @@ class _ProfilePageState extends State<ProfilePage> {
     if (bytes == null || bytes.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nao foi possivel ler a imagem selecionada.')),
+        const SnackBar(
+            content: Text('Nao foi possivel ler a imagem selecionada.')),
       );
       return;
     }
@@ -86,9 +88,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
+    final scale = AppResponsive.scale(context);
+    final horizontalPadding = AppResponsive.pagePadding(context);
     final dateHeader = _formatBrasiliaDateHeader();
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
@@ -127,7 +128,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       SizedBox(
                         height: 34 * scale,
-                        child: Image.asset('src/img/logo.png', fit: BoxFit.contain),
+                        child: Image.asset('src/img/logo.png',
+                            fit: BoxFit.contain),
                       ),
                       const Spacer(),
                       ThemeModeButton(scale: scale),
@@ -139,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
-                      fontSize: 42 * scale,
+                      fontSize: 36 * scale,
                     ),
                   ),
                   SizedBox(height: 4 * scale),
@@ -161,12 +163,17 @@ class _ProfilePageState extends State<ProfilePage> {
               future: _userFuture,
               builder: (context, snapshot) {
                 final user = snapshot.data;
-                final name = (user?.name.trim().isNotEmpty == true) ? user!.name.trim() : 'USUARIO';
+                final name = (user?.name.trim().isNotEmpty == true)
+                    ? user!.name.trim()
+                    : 'USUARIO';
                 final username = (user?.username.trim().isNotEmpty == true)
                     ? user!.username.trim()
                     : 'nao definido';
-                final email = (user?.email.trim().isNotEmpty == true) ? user!.email.trim() : 'nao definido';
-                final memberSince = DateFormat('dd/MM/yyyy').format(user?.createdAt ?? DateTime.now());
+                final email = (user?.email.trim().isNotEmpty == true)
+                    ? user!.email.trim()
+                    : 'nao definido';
+                final memberSince = DateFormat('dd/MM/yyyy')
+                    .format(user?.createdAt ?? DateTime.now());
 
                 return SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
@@ -187,7 +194,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           18 * scale,
                         ),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
+                          color:
+                              isDark ? const Color(0xFF1A1D2A) : Colors.white,
                           borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
@@ -204,13 +212,20 @@ class _ProfilePageState extends State<ProfilePage> {
                               style: TextStyle(
                                 fontSize: 24 * scale,
                                 fontWeight: FontWeight.w700,
-                                color: isDark ? Colors.white : const Color(0xFF111111),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF111111),
                               ),
                             ),
                             SizedBox(height: 10 * scale),
-                            _infoRow(Icons.person_outline, 'Nome Completo: $name', scale, isDark: isDark),
-                            _infoRow(Icons.alternate_email, 'Usuario: $username', scale, isDark: isDark),
-                            _infoRow(Icons.mail_outline, 'Email: $email', scale, isDark: isDark),
+                            _infoRow(Icons.person_outline,
+                                'Nome Completo: $name', scale,
+                                isDark: isDark),
+                            _infoRow(Icons.alternate_email,
+                                'Usuario: $username', scale,
+                                isDark: isDark),
+                            _infoRow(Icons.mail_outline, 'Email: $email', scale,
+                                isDark: isDark),
                             _infoRow(
                               Icons.calendar_month_outlined,
                               'Membro Desde: $memberSince',
@@ -224,7 +239,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               isDark: isDark,
                               onPressed: () async {
                                 await Navigator.of(context).push(
-                                  MaterialPageRoute<void>(builder: (_) => const SettingsPage()),
+                                  MaterialPageRoute<void>(
+                                      builder: (_) => const SettingsPage()),
                                 );
                                 if (!context.mounted) return;
                                 await _reloadUser();
@@ -239,7 +255,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 await _authService.logout();
                                 if (!context.mounted) return;
                                 Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+                                  MaterialPageRoute<void>(
+                                      builder: (_) => const LoginPage()),
                                   (_) => false,
                                 );
                               },
@@ -264,9 +281,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                     width: 30 * scale,
                                     height: 30 * scale,
                                     decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE86710),
+                                      color: isDark
+                                          ? const Color(0xFFB06CFF)
+                                          : const Color(0xFFE86710),
                                       borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: Colors.white, width: 2),
+                                      border: Border.all(
+                                          color: Colors.white, width: 2),
                                     ),
                                     child: Icon(
                                       Icons.camera_alt_rounded,
@@ -360,7 +380,8 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Widget _infoRow(IconData icon, String text, double scale, {required bool isDark}) {
+  Widget _infoRow(IconData icon, String text, double scale,
+      {required bool isDark}) {
     return Padding(
       padding: EdgeInsets.only(bottom: 6 * scale),
       child: Row(
@@ -400,7 +421,8 @@ class _ProfilePageState extends State<ProfilePage> {
       child: ElevatedButton(
         onPressed: onPressed ?? () {},
         style: ElevatedButton.styleFrom(
-          backgroundColor: isDark ? const Color(0xFF8A46DB) : const Color(0xFFFF8A00),
+          backgroundColor:
+              isDark ? const Color(0xFF8A46DB) : const Color(0xFFFF8A00),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -418,4 +440,3 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-

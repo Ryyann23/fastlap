@@ -7,6 +7,7 @@ import '../../../map/presentation/pages/map_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../../shared/data/route_model.dart';
 import '../../../../shared/data/route_service.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../../../../shared/widgets/user_header_avatar.dart';
@@ -25,7 +26,8 @@ class _RoutesPageState extends State<RoutesPage> {
 
   String _formatBrasiliaDate() {
     final brasiliaNow = DateTime.now().toUtc().add(const Duration(hours: -3));
-    final raw = DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
+    final raw =
+        DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
     if (raw.isEmpty) return '';
     final withoutDot = raw.replaceAll('.', '');
     return withoutDot[0].toUpperCase() + withoutDot.substring(1);
@@ -51,7 +53,11 @@ class _RoutesPageState extends State<RoutesPage> {
     final service = RouteService.instance;
     switch (selectedTab) {
       case 0:
-        return service.routes.where((r) => r.status == RouteStatus.ativa || r.status == RouteStatus.pausada).toList();
+        return service.routes
+            .where((r) =>
+                r.status == RouteStatus.ativa ||
+                r.status == RouteStatus.pausada)
+            .toList();
       case 1:
         return service.scheduledRoutes;
       case 2:
@@ -64,9 +70,8 @@ class _RoutesPageState extends State<RoutesPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
+    final scale = AppResponsive.scale(context);
+    final horizontalPadding = AppResponsive.pagePadding(context);
     final dateText = _formatBrasiliaDate();
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
@@ -79,7 +84,8 @@ class _RoutesPageState extends State<RoutesPage> {
         children: [
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(horizontalPadding, 10 * scale, horizontalPadding, 20 * scale),
+            padding: EdgeInsets.fromLTRB(
+                horizontalPadding, 10 * scale, horizontalPadding, 20 * scale),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: headerGradient,
@@ -101,7 +107,8 @@ class _RoutesPageState extends State<RoutesPage> {
                     children: [
                       SizedBox(
                         height: 34 * scale,
-                        child: Image.asset('src/img/logo.png', fit: BoxFit.contain),
+                        child: Image.asset('src/img/logo.png',
+                            fit: BoxFit.contain),
                       ),
                       const Spacer(),
                       ThemeModeButton(scale: scale),
@@ -115,7 +122,7 @@ class _RoutesPageState extends State<RoutesPage> {
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
-                      fontSize: 36 * scale,
+                      fontSize: 32 * scale,
                     ),
                   ),
                   SizedBox(height: 4 * scale),
@@ -124,7 +131,7 @@ class _RoutesPageState extends State<RoutesPage> {
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.9),
                       fontWeight: FontWeight.w400,
-                      fontSize: 20 * scale,
+                      fontSize: 18 * scale,
                     ),
                   ),
                 ],
@@ -135,13 +142,15 @@ class _RoutesPageState extends State<RoutesPage> {
             child: Column(
               children: [
                 Padding(
-                  padding: EdgeInsets.fromLTRB(horizontalPadding, 12 * scale, horizontalPadding, 0),
+                  padding: EdgeInsets.fromLTRB(
+                      horizontalPadding, 12 * scale, horizontalPadding, 0),
                   child: Column(
                     children: [
                       Container(
                         padding: EdgeInsets.all(4 * scale),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
+                          color:
+                              isDark ? const Color(0xFF1A1D2A) : Colors.white,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
@@ -187,7 +196,9 @@ class _RoutesPageState extends State<RoutesPage> {
                               Icon(
                                 Icons.alt_route_rounded,
                                 size: 64 * scale,
-                                color: isDark ? Colors.white24 : const Color(0xFFCCCCCC),
+                                color: isDark
+                                    ? Colors.white24
+                                    : const Color(0xFFCCCCCC),
                               ),
                               SizedBox(height: 12 * scale),
                               Text(
@@ -198,7 +209,9 @@ class _RoutesPageState extends State<RoutesPage> {
                                         : 'Nenhuma rota no histórico',
                                 style: TextStyle(
                                   fontSize: 17 * scale,
-                                  color: isDark ? Colors.white38 : const Color(0xFF999999),
+                                  color: isDark
+                                      ? Colors.white38
+                                      : const Color(0xFF999999),
                                 ),
                               ),
                               SizedBox(height: 6 * scale),
@@ -206,14 +219,17 @@ class _RoutesPageState extends State<RoutesPage> {
                                 'Crie uma nova rota para começar',
                                 style: TextStyle(
                                   fontSize: 14 * scale,
-                                  color: isDark ? Colors.white24 : const Color(0xFFBBBBBB),
+                                  color: isDark
+                                      ? Colors.white24
+                                      : const Color(0xFFBBBBBB),
                                 ),
                               ),
                             ],
                           ),
                         )
                       : ListView.builder(
-                          padding: EdgeInsets.fromLTRB(horizontalPadding, 0, horizontalPadding, 16 * scale),
+                          padding: EdgeInsets.fromLTRB(horizontalPadding, 0,
+                              horizontalPadding, 16 * scale),
                           itemCount: routes.length,
                           itemBuilder: (context, index) {
                             final route = routes[index];
@@ -226,11 +242,14 @@ class _RoutesPageState extends State<RoutesPage> {
                 ),
                 // Botão criar nova rota
                 Padding(
-                  padding: EdgeInsets.fromLTRB(horizontalPadding, 0, horizontalPadding, 12 * scale),
+                  padding: EdgeInsets.fromLTRB(
+                      horizontalPadding, 0, horizontalPadding, 12 * scale),
                   child: GestureDetector(
                     onTap: () async {
-                      final result = await Navigator.of(context).push<RouteStatus?>(
-                        MaterialPageRoute(builder: (_) => const CreateRoutePage()),
+                      final result =
+                          await Navigator.of(context).push<RouteStatus?>(
+                        MaterialPageRoute(
+                            builder: (_) => const CreateRoutePage()),
                       );
                       if (result != null && mounted) {
                         setState(() {
@@ -280,7 +299,8 @@ class _RoutesPageState extends State<RoutesPage> {
                               color: Colors.white.withValues(alpha: 0.26),
                               borderRadius: BorderRadius.circular(18),
                             ),
-                            child: Icon(Icons.add, color: Colors.white, size: 22 * scale),
+                            child: Icon(Icons.add,
+                                color: Colors.white, size: 22 * scale),
                           ),
                         ],
                       ),
@@ -297,16 +317,20 @@ class _RoutesPageState extends State<RoutesPage> {
         currentTab: FastlapTab.rotas,
         onTabSelected: (tab) {
           if (tab == FastlapTab.inicio) {
-            Navigator.of(context).pushReplacement(noAnimationRoute(const HomePage()));
+            Navigator.of(context)
+                .pushReplacement(noAnimationRoute(const HomePage()));
           }
           if (tab == FastlapTab.mapa) {
-            Navigator.of(context).pushReplacement(noAnimationRoute(const MapPage()));
+            Navigator.of(context)
+                .pushReplacement(noAnimationRoute(const MapPage()));
           }
           if (tab == FastlapTab.historico) {
-            Navigator.of(context).pushReplacement(noAnimationRoute(const HistoryPage()));
+            Navigator.of(context)
+                .pushReplacement(noAnimationRoute(const HistoryPage()));
           }
           if (tab == FastlapTab.perfil) {
-            Navigator.of(context).pushReplacement(noAnimationRoute(const ProfilePage()));
+            Navigator.of(context)
+                .pushReplacement(noAnimationRoute(const ProfilePage()));
           }
         },
       ),
@@ -372,7 +396,8 @@ class _RoutesPageState extends State<RoutesPage> {
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 6 * scale),
+                padding: EdgeInsets.symmetric(
+                    horizontal: 12 * scale, vertical: 6 * scale),
                 decoration: BoxDecoration(
                   color: statusBgColor,
                   borderRadius: BorderRadius.circular(18),
@@ -398,7 +423,8 @@ class _RoutesPageState extends State<RoutesPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _metric('Distância:', '${route.totalDistanceKm.toStringAsFixed(1)} km', scale),
+              _metric('Distância:',
+                  '${route.totalDistanceKm.toStringAsFixed(1)} km', scale),
               _metric('Tempo:', route.estimatedTime, scale),
               _metric('Pontos:', '${route.points.length}', scale),
             ],
@@ -419,14 +445,17 @@ class _RoutesPageState extends State<RoutesPage> {
             ),
           ),
 
-          if (route.status == RouteStatus.agendada && route.scheduledTime != null) ...[
+          if (route.status == RouteStatus.agendada &&
+              route.scheduledTime != null) ...[
             SizedBox(height: 6 * scale),
             Row(
               children: [
-                Icon(Icons.schedule, size: 16 * scale, color: const Color(0xFF858585)),
+                Icon(Icons.schedule,
+                    size: 16 * scale, color: const Color(0xFF858585)),
                 SizedBox(width: 4 * scale),
                 Text(
-                  DateFormat("dd/MM/yyyy 'às' HH:mm", 'pt_BR').format(route.scheduledTime!),
+                  DateFormat("dd/MM/yyyy 'às' HH:mm", 'pt_BR')
+                      .format(route.scheduledTime!),
                   style: TextStyle(
                     fontSize: 14 * scale,
                     color: isDark ? Colors.white70 : const Color(0xFF555555),
@@ -437,7 +466,10 @@ class _RoutesPageState extends State<RoutesPage> {
           ],
 
           SizedBox(height: 10 * scale),
-          Container(height: 1, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+          Container(
+              height: 1,
+              color:
+                  isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
 
           // Ações
           SizedBox(
@@ -456,40 +488,74 @@ class _RoutesPageState extends State<RoutesPage> {
       case RouteStatus.ativa:
         return Row(
           children: [
-            Expanded(child: _actionRow(Icons.pause_circle_outline, 'Pausar', scale, onTap: () {
+            Expanded(
+                child: _actionRow(Icons.pause_circle_outline, 'Pausar', scale,
+                    onTap: () {
               RouteService.instance.updateStatus(route.id, RouteStatus.pausada);
             })),
-            Container(width: 1, height: 26 * scale, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
-            Expanded(child: _actionRow(Icons.check_circle_outline, 'Concluir', scale, onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.concluida);
+            Container(
+                width: 1,
+                height: 26 * scale,
+                color:
+                    isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+            Expanded(
+                child: _actionRow(Icons.check_circle_outline, 'Concluir', scale,
+                    onTap: () {
+              RouteService.instance
+                  .updateStatus(route.id, RouteStatus.concluida);
             })),
-            Container(width: 1, height: 26 * scale, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
-            Expanded(child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale, onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.cancelada);
+            Container(
+                width: 1,
+                height: 26 * scale,
+                color:
+                    isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+            Expanded(
+                child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale,
+                    onTap: () {
+              RouteService.instance
+                  .updateStatus(route.id, RouteStatus.cancelada);
             })),
           ],
         );
       case RouteStatus.pausada:
         return Row(
           children: [
-            Expanded(child: _actionRow(Icons.play_circle_outline, 'Retomar', scale, onTap: () {
+            Expanded(
+                child: _actionRow(Icons.play_circle_outline, 'Retomar', scale,
+                    onTap: () {
               RouteService.instance.updateStatus(route.id, RouteStatus.ativa);
             })),
-            Container(width: 1, height: 26 * scale, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
-            Expanded(child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale, onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.cancelada);
+            Container(
+                width: 1,
+                height: 26 * scale,
+                color:
+                    isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+            Expanded(
+                child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale,
+                    onTap: () {
+              RouteService.instance
+                  .updateStatus(route.id, RouteStatus.cancelada);
             })),
           ],
         );
       case RouteStatus.agendada:
         return Row(
           children: [
-            Expanded(child: _actionRow(Icons.play_circle_outline, 'Iniciar', scale, onTap: () {
+            Expanded(
+                child: _actionRow(Icons.play_circle_outline, 'Iniciar', scale,
+                    onTap: () {
               RouteService.instance.updateStatus(route.id, RouteStatus.ativa);
             })),
-            Container(width: 1, height: 26 * scale, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
-            Expanded(child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale, onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.cancelada);
+            Container(
+                width: 1,
+                height: 26 * scale,
+                color:
+                    isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+            Expanded(
+                child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale,
+                    onTap: () {
+              RouteService.instance
+                  .updateStatus(route.id, RouteStatus.cancelada);
             })),
           ],
         );
@@ -497,7 +563,9 @@ class _RoutesPageState extends State<RoutesPage> {
       case RouteStatus.cancelada:
         return Row(
           children: [
-            Expanded(child: _actionRow(Icons.map_outlined, 'Ver no Mapa', scale, onTap: () {
+            Expanded(
+                child: _actionRow(Icons.map_outlined, 'Ver no Mapa', scale,
+                    onTap: () {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute<void>(builder: (_) => const MapPage()),
               );
@@ -561,7 +629,8 @@ class _RoutesPageState extends State<RoutesPage> {
     );
   }
 
-  Widget _actionRow(IconData icon, String label, double scale, {VoidCallback? onTap}) {
+  Widget _actionRow(IconData icon, String label, double scale,
+      {VoidCallback? onTap}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
@@ -653,14 +722,18 @@ class _RouteTabChip extends StatelessWidget {
                     end: Alignment.bottomRight,
                   )
                 : null,
-            color: selected ? null : (isDark ? const Color(0xFF111421) : Colors.transparent),
+            color: selected
+                ? null
+                : (isDark ? const Color(0xFF111421) : Colors.transparent),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 15 * scale,
-              color: selected ? Colors.white : (isDark ? Colors.white : const Color(0xFF2A2A2A)),
+              color: selected
+                  ? Colors.white
+                  : (isDark ? Colors.white : const Color(0xFF2A2A2A)),
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             ),
           ),

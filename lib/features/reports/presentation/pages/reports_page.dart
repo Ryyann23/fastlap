@@ -8,6 +8,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../shared/data/audit_log_service.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 
 class ReportsPage extends StatefulWidget {
@@ -39,7 +40,8 @@ class _ReportsPageState extends State<ReportsPage> {
 
   String _formatBrasiliaNow() {
     final brasiliaNow = DateTime.now().toUtc().add(const Duration(hours: -3));
-    final raw = DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
+    final raw =
+        DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
     if (raw.isEmpty) return '';
     final withoutDot = raw.replaceAll('.', '');
     return withoutDot[0].toUpperCase() + withoutDot.substring(1);
@@ -138,15 +140,18 @@ class _ReportsPageState extends State<ReportsPage> {
                   ),
                 ),
                 pw.Text(
-                  DateFormat('dd/MM/yyyy HH:mm', 'pt_BR').format(DateTime.now()),
-                  style: const pw.TextStyle(color: PdfColors.white, fontSize: 12),
+                  DateFormat('dd/MM/yyyy HH:mm', 'pt_BR')
+                      .format(DateTime.now()),
+                  style:
+                      const pw.TextStyle(color: PdfColors.white, fontSize: 12),
                 ),
               ],
             ),
           ),
           pw.SizedBox(height: 14),
           pw.Table.fromTextArray(
-            border: pw.TableBorder.all(color: const PdfColor.fromInt(0xFFFF8A00), width: 0.6),
+            border: pw.TableBorder.all(
+                color: const PdfColor.fromInt(0xFFFF8A00), width: 0.6),
             headerStyle: pw.TextStyle(
               color: PdfColors.white,
               fontWeight: pw.FontWeight.bold,
@@ -200,9 +205,8 @@ class _ReportsPageState extends State<ReportsPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
+    final scale = AppResponsive.scale(context);
+    final horizontalPadding = AppResponsive.pagePadding(context);
     final dateTimeText = _formatBrasiliaNow();
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
@@ -242,7 +246,8 @@ class _ReportsPageState extends State<ReportsPage> {
                     children: [
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                        icon: const Icon(Icons.arrow_back_rounded,
+                            color: Colors.white),
                       ),
                       const Spacer(),
                       ThemeModeButton(scale: scale),
@@ -254,7 +259,7 @@ class _ReportsPageState extends State<ReportsPage> {
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
-                      fontSize: 34 * scale,
+                      fontSize: 30 * scale,
                     ),
                   ),
                   SizedBox(height: 4 * scale),
@@ -271,7 +276,8 @@ class _ReportsPageState extends State<ReportsPage> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(horizontalPadding, 12 * scale, horizontalPadding, 8 * scale),
+            padding: EdgeInsets.fromLTRB(
+                horizontalPadding, 12 * scale, horizontalPadding, 8 * scale),
             child: Row(
               children: [
                 Expanded(
@@ -293,7 +299,8 @@ class _ReportsPageState extends State<ReportsPage> {
                         ),
                       ),
                     ],
-                    onChanged: (value) => setState(() => _selectedAction = value),
+                    onChanged: (value) =>
+                        setState(() => _selectedAction = value),
                   ),
                 ),
                 SizedBox(width: 8 * scale),
@@ -317,7 +324,8 @@ class _ReportsPageState extends State<ReportsPage> {
                       'Nenhum evento encontrado.',
                       style: TextStyle(
                         fontSize: 16 * scale,
-                        color: isDark ? Colors.white54 : const Color(0xFF666666),
+                        color:
+                            isDark ? Colors.white54 : const Color(0xFF666666),
                       ),
                     ),
                   )
@@ -335,7 +343,8 @@ class _ReportsPageState extends State<ReportsPage> {
                         margin: EdgeInsets.only(bottom: 10 * scale),
                         padding: EdgeInsets.all(12 * scale),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
+                          color:
+                              isDark ? const Color(0xFF1A1D2A) : Colors.white,
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
@@ -350,7 +359,9 @@ class _ReportsPageState extends State<ReportsPage> {
                           children: [
                             Icon(
                               Icons.history_toggle_off_rounded,
-                              color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE86710),
+                              color: isDark
+                                  ? const Color(0xFFB06CFF)
+                                  : const Color(0xFFE86710),
                             ),
                             SizedBox(width: 10 * scale),
                             Expanded(
@@ -362,7 +373,9 @@ class _ReportsPageState extends State<ReportsPage> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 16 * scale,
-                                      color: isDark ? Colors.white : const Color(0xFF1B1B1B),
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF1B1B1B),
                                     ),
                                   ),
                                   SizedBox(height: 2 * scale),
@@ -370,7 +383,9 @@ class _ReportsPageState extends State<ReportsPage> {
                                     entry.description,
                                     style: TextStyle(
                                       fontSize: 14 * scale,
-                                      color: isDark ? Colors.white70 : const Color(0xFF353535),
+                                      color: isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF353535),
                                     ),
                                   ),
                                   SizedBox(height: 4 * scale),
@@ -378,17 +393,22 @@ class _ReportsPageState extends State<ReportsPage> {
                                     '${DateFormat("dd/MM/yyyy HH:mm", 'pt_BR').format(entry.createdAt)} • ${entry.entityType} #${entry.entityId}',
                                     style: TextStyle(
                                       fontSize: 12 * scale,
-                                      color: isDark ? Colors.white54 : const Color(0xFF666666),
+                                      color: isDark
+                                          ? Colors.white54
+                                          : const Color(0xFF666666),
                                     ),
                                   ),
-                                  if (entry.userName != null && entry.userName!.isNotEmpty)
+                                  if (entry.userName != null &&
+                                      entry.userName!.isNotEmpty)
                                     Padding(
                                       padding: EdgeInsets.only(top: 2 * scale),
                                       child: Text(
                                         'Usuário: ${entry.userName}',
                                         style: TextStyle(
                                           fontSize: 12 * scale,
-                                          color: isDark ? Colors.white54 : const Color(0xFF666666),
+                                          color: isDark
+                                              ? Colors.white54
+                                              : const Color(0xFF666666),
                                         ),
                                       ),
                                     ),

@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../data/auth_service.dart';
 import '../../../home/presentation/pages/home_page.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import 'register_page.dart';
 import '../widgets/auth_text_field.dart';
@@ -52,15 +53,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final widthScale = (size.width / 393).clamp(0.86, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.06).clamp(16.0, 30.0).toDouble();
+    final widthScale = AppResponsive.scale(context, min: 0.74);
+    final horizontalPadding = AppResponsive.authPadding(context);
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
         : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
@@ -109,7 +110,8 @@ class _LoginPageState extends State<LoginPage> {
                           constraints: const BoxConstraints(maxWidth: 520),
                           child: Container(
                             width: double.infinity,
-                            margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                            margin: EdgeInsets.symmetric(
+                                horizontal: horizontalPadding),
                             padding: EdgeInsets.fromLTRB(
                               22 * widthScale,
                               28 * widthScale,
@@ -117,7 +119,9 @@ class _LoginPageState extends State<LoginPage> {
                               24 * widthScale,
                             ),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
+                              color: isDark
+                                  ? const Color(0xFF1A1D2A)
+                                  : Colors.white,
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
@@ -133,7 +137,9 @@ class _LoginPageState extends State<LoginPage> {
                                 SizedBox(
                                   height: 74 * widthScale,
                                   child: Image.asset(
-                                    isDark ? 'src/img/logo.png' : 'src/img/logo.jpg',
+                                    isDark
+                                        ? 'src/img/logo.png'
+                                        : 'src/img/logo.jpg',
                                     fit: BoxFit.contain,
                                   ),
                                 ),
@@ -144,7 +150,9 @@ class _LoginPageState extends State<LoginPage> {
                                   style: TextStyle(
                                     fontSize: 18 * widthScale,
                                     fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white : const Color(0xFF2C2C2C),
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF2C2C2C),
                                   ),
                                 ),
                                 SizedBox(height: 16 * widthScale),
@@ -188,7 +196,8 @@ class _LoginPageState extends State<LoginPage> {
                                         ? SizedBox(
                                             width: 20 * widthScale,
                                             height: 20 * widthScale,
-                                            child: const CircularProgressIndicator(
+                                            child:
+                                                const CircularProgressIndicator(
                                               strokeWidth: 2.2,
                                               color: Colors.white,
                                             ),
@@ -202,24 +211,33 @@ class _LoginPageState extends State<LoginPage> {
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
                                     fontSize: 16 * widthScale,
-                                    color: isDark ? const Color(0xFFD5DAEA) : const Color(0xFF1F1F1F),
+                                    color: isDark
+                                        ? const Color(0xFFD5DAEA)
+                                        : const Color(0xFF1F1F1F),
                                   ),
                                 ),
                                 SizedBox(height: 16 * widthScale),
                                 Row(
                                   children: [
-                                    const Expanded(child: Divider(color: Color(0xFF9C9C9C))),
+                                    const Expanded(
+                                        child:
+                                            Divider(color: Color(0xFF9C9C9C))),
                                     Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 12 * widthScale),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12 * widthScale),
                                       child: Text(
                                         'Ou entre com',
                                         style: TextStyle(
                                           fontSize: 15 * widthScale,
-                                          color: isDark ? const Color(0xFFC8CEDF) : const Color(0xFF363636),
+                                          color: isDark
+                                              ? const Color(0xFFC8CEDF)
+                                              : const Color(0xFF363636),
                                         ),
                                       ),
                                     ),
-                                    const Expanded(child: Divider(color: Color(0xFF9C9C9C))),
+                                    const Expanded(
+                                        child:
+                                            Divider(color: Color(0xFF9C9C9C))),
                                   ],
                                 ),
                                 SizedBox(height: 12 * widthScale),
@@ -233,7 +251,8 @@ class _LoginPageState extends State<LoginPage> {
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(40),
-                                        border: Border.all(color: const Color(0xFFDDDDDD)),
+                                        border: Border.all(
+                                            color: const Color(0xFFDDDDDD)),
                                       ),
                                       child: FaIcon(
                                         FontAwesomeIcons.google,
@@ -249,7 +268,8 @@ class _LoginPageState extends State<LoginPage> {
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(40),
-                                        border: Border.all(color: const Color(0xFFDDDDDD)),
+                                        border: Border.all(
+                                            color: const Color(0xFFDDDDDD)),
                                       ),
                                       child: Icon(
                                         Icons.apple,
@@ -265,16 +285,20 @@ class _LoginPageState extends State<LoginPage> {
                                     text: TextSpan(
                                       style: TextStyle(
                                         fontSize: 16 * widthScale,
-                                        color: isDark ? const Color(0xFFE0E5F4) : const Color(0xFF242424),
+                                        color: isDark
+                                            ? const Color(0xFFE0E5F4)
+                                            : const Color(0xFF242424),
                                       ),
                                       children: [
-                                        const TextSpan(text: 'Nao tem uma conta? '),
+                                        const TextSpan(
+                                            text: 'Nao tem uma conta? '),
                                         WidgetSpan(
                                           child: GestureDetector(
                                             onTap: () {
                                               Navigator.of(context).push(
                                                 MaterialPageRoute<void>(
-                                                  builder: (_) => const RegisterPage(),
+                                                  builder: (_) =>
+                                                      const RegisterPage(),
                                                 ),
                                               );
                                             },

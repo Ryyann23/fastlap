@@ -30,7 +30,8 @@ class UserHeaderAvatar extends StatelessWidget {
         return CircleAvatar(
           radius: radius,
           backgroundColor: isDark ? darkBackgroundColor : lightBackgroundColor,
-          backgroundImage: avatarBytes == null ? null : MemoryImage(avatarBytes),
+          backgroundImage:
+              avatarBytes == null ? null : MemoryImage(avatarBytes),
           child: avatarBytes == null
               ? Icon(
                   Icons.person,

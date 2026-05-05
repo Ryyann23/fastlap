@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/auth_service.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../widgets/auth_text_field.dart';
 
@@ -65,15 +66,15 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final widthScale = (size.width / 393).clamp(0.86, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.06).clamp(16.0, 30.0).toDouble();
+    final widthScale = AppResponsive.scale(context, min: 0.74);
+    final horizontalPadding = AppResponsive.authPadding(context);
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
         : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
@@ -112,7 +113,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         children: [
                           IconButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                            icon: const Icon(Icons.arrow_back,
+                                color: Colors.white),
                           ),
                           const Spacer(),
                           ThemeModeButton(scale: widthScale),
@@ -126,7 +128,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           constraints: const BoxConstraints(maxWidth: 520),
                           child: Container(
                             width: double.infinity,
-                            margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                            margin: EdgeInsets.symmetric(
+                                horizontal: horizontalPadding),
                             padding: EdgeInsets.fromLTRB(
                               22 * widthScale,
                               28 * widthScale,
@@ -134,7 +137,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               24 * widthScale,
                             ),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
+                              color: isDark
+                                  ? const Color(0xFF1A1D2A)
+                                  : Colors.white,
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
@@ -153,7 +158,9 @@ class _RegisterPageState extends State<RegisterPage> {
                                   style: TextStyle(
                                     fontSize: 24 * widthScale,
                                     fontWeight: FontWeight.w700,
-                                    color: isDark ? Colors.white : const Color(0xFF2C2C2C),
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF2C2C2C),
                                   ),
                                 ),
                                 SizedBox(height: 18 * widthScale),
@@ -208,7 +215,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                         ? SizedBox(
                                             width: 20 * widthScale,
                                             height: 20 * widthScale,
-                                            child: const CircularProgressIndicator(
+                                            child:
+                                                const CircularProgressIndicator(
                                               strokeWidth: 2.2,
                                               color: Colors.white,
                                             ),

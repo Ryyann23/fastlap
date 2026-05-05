@@ -12,6 +12,7 @@ import '../../../vehicles/presentation/pages/vehicles_page.dart';
 import '../../../reports/presentation/pages/reports_page.dart';
 import '../../../../shared/data/route_model.dart';
 import '../../../../shared/data/route_service.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../../../../shared/widgets/user_header_avatar.dart';
@@ -44,7 +45,8 @@ class _HomePageState extends State<HomePage> {
 
   String _formatBrasiliaNow() {
     final brasiliaNow = DateTime.now().toUtc().add(const Duration(hours: -3));
-    final raw = DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
+    final raw =
+        DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
     if (raw.isEmpty) return '';
 
     final withoutDot = raw.replaceAll('.', '');
@@ -56,9 +58,9 @@ class _HomePageState extends State<HomePage> {
     final userFuture = AuthService().getActiveUser();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final routeService = RouteService.instance;
-    final size = MediaQuery.of(context).size;
-    final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
+    final scale = AppResponsive.scale(context);
+    final horizontalPadding = AppResponsive.pagePadding(context);
+    final isNarrow = AppResponsive.isNarrow(context);
     final dateTimeText = _formatBrasiliaNow();
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
@@ -97,7 +99,8 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       SizedBox(
                         height: 34 * scale,
-                        child: Image.asset('src/img/logo.png', fit: BoxFit.contain),
+                        child: Image.asset('src/img/logo.png',
+                            fit: BoxFit.contain),
                       ),
                       const Spacer(),
                       ThemeModeButton(scale: scale),
@@ -153,37 +156,47 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                       color: isDark ? Colors.white : const Color(0xFF111111),
                       fontWeight: FontWeight.w700,
-                      fontSize: 34 * scale,
+                      fontSize: 30 * scale,
                     ),
                   ),
                   SizedBox(height: 12 * scale),
                   SizedBox(
-                    height: 176 * scale,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
+                    height: 164 * scale,
+                    child: Row(
                       children: [
-                        SummaryCard(
-                          title: 'ROTAS ATIVAS',
-                          value: '${routeService.activeRoutes.length}',
-                          subtitle: 'Pausadas: ${routeService.pausedRoutes.length} |\nAgendadas: ${routeService.scheduledRoutes.length}',
-                          icon: Icons.alt_route_rounded,
-                          scale: scale,
+                        Expanded(
+                          child: SummaryCard(
+                            title: 'ROTAS ATIVAS',
+                            value: '${routeService.activeRoutes.length}',
+                            subtitle:
+                                'Pausadas: ${routeService.pausedRoutes.length} |\nAgendadas: ${routeService.scheduledRoutes.length}',
+                            icon: Icons.alt_route_rounded,
+                            scale: scale,
+                            compact: isNarrow,
+                          ),
                         ),
-                        SizedBox(width: 10 * scale),
-                        SummaryCard(
-                          title: 'CONCLUÍDAS HOJE',
-                          value: '${routeService.todayCompleted}',
-                          subtitle: 'Total:\n${routeService.completedRoutes.length}',
-                          icon: Icons.check_circle_outline,
-                          scale: scale,
+                        SizedBox(width: 8 * scale),
+                        Expanded(
+                          child: SummaryCard(
+                            title: 'CONCLUÍDAS HOJE',
+                            value: '${routeService.todayCompleted}',
+                            subtitle:
+                                'Total:\n${routeService.completedRoutes.length}',
+                            icon: Icons.check_circle_outline,
+                            scale: scale,
+                            compact: isNarrow,
+                          ),
                         ),
-                        SizedBox(width: 10 * scale),
-                        SummaryCard(
-                          title: 'KMs PERCORRIDOS',
-                          value: routeService.todayKm.toStringAsFixed(1),
-                          subtitle: 'Hoje',
-                          icon: Icons.speed,
-                          scale: scale,
+                        SizedBox(width: 8 * scale),
+                        Expanded(
+                          child: SummaryCard(
+                            title: 'KMs PERCORRIDOS',
+                            value: routeService.todayKm.toStringAsFixed(1),
+                            subtitle: 'Hoje',
+                            icon: Icons.speed,
+                            scale: scale,
+                            compact: isNarrow,
+                          ),
                         ),
                       ],
                     ),
@@ -215,8 +228,10 @@ class _HomePageState extends State<HomePage> {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(32),
                         onTap: () async {
-                          final result = await Navigator.of(context).push<RouteStatus?>(
-                            MaterialPageRoute(builder: (_) => const CreateRoutePage()),
+                          final result =
+                              await Navigator.of(context).push<RouteStatus?>(
+                            MaterialPageRoute(
+                                builder: (_) => const CreateRoutePage()),
                           );
                           if (result != null && mounted) setState(() {});
                         },
@@ -257,7 +272,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                       color: isDark ? Colors.white : const Color(0xFF111111),
                       fontWeight: FontWeight.w700,
-                      fontSize: 34 * scale,
+                      fontSize: 30 * scale,
                     ),
                   ),
                   SizedBox(height: 12 * scale),
@@ -265,14 +280,16 @@ class _HomePageState extends State<HomePage> {
                     crossAxisCount: 2,
                     mainAxisSpacing: 12 * scale,
                     crossAxisSpacing: 12 * scale,
-                    childAspectRatio: 2.2,
+                    childAspectRatio: isNarrow ? 1.85 : 2.2,
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
                     children: [
                       GestureDetector(
                         onTap: () async {
-                          final result = await Navigator.of(context).push<dynamic>(
-                            MaterialPageRoute(builder: (_) => const VehiclesPage()),
+                          final result =
+                              await Navigator.of(context).push<dynamic>(
+                            MaterialPageRoute(
+                                builder: (_) => const VehiclesPage()),
                           );
                           if (result != null && mounted) setState(() {});
                         },
@@ -284,8 +301,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                       GestureDetector(
                         onTap: () async {
-                          final result = await Navigator.of(context).push<dynamic>(
-                            MaterialPageRoute(builder: (_) => const SettingsPage()),
+                          final result =
+                              await Navigator.of(context).push<dynamic>(
+                            MaterialPageRoute(
+                                builder: (_) => const SettingsPage()),
                           );
                           if (result != null && mounted) setState(() {});
                         },
@@ -297,8 +316,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                       GestureDetector(
                         onTap: () async {
-                          final result = await Navigator.of(context).push<dynamic>(
-                            MaterialPageRoute(builder: (_) => const VehiclesPage()),
+                          final result =
+                              await Navigator.of(context).push<dynamic>(
+                            MaterialPageRoute(
+                                builder: (_) => const VehiclesPage()),
                           );
                           if (result != null && mounted) setState(() {});
                         },
@@ -310,8 +331,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                       GestureDetector(
                         onTap: () async {
-                          final result = await Navigator.of(context).push<dynamic>(
-                            MaterialPageRoute(builder: (_) => const ReportsPage()),
+                          final result =
+                              await Navigator.of(context).push<dynamic>(
+                            MaterialPageRoute(
+                                builder: (_) => const ReportsPage()),
                           );
                           if (result != null && mounted) setState(() {});
                         },
@@ -359,4 +382,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-

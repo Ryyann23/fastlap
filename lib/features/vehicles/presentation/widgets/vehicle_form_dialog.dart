@@ -57,19 +57,22 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
       );
       return false;
     }
-    if (_speedController.text.isEmpty || double.tryParse(_speedController.text) == null) {
+    if (_speedController.text.isEmpty ||
+        double.tryParse(_speedController.text) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Velocidade inválida')),
       );
       return false;
     }
-    if (_capacityController.text.isEmpty || double.tryParse(_capacityController.text) == null) {
+    if (_capacityController.text.isEmpty ||
+        double.tryParse(_capacityController.text) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Capacidade inválida')),
       );
       return false;
     }
-    if (_weightController.text.isEmpty || double.tryParse(_weightController.text) == null) {
+    if (_weightController.text.isEmpty ||
+        double.tryParse(_weightController.text) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Peso inválido')),
       );
@@ -86,6 +89,10 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
     return AlertDialog(
       backgroundColor: isDark ? const Color(0xFF0D0F14) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: 16 * widget.scale,
+        vertical: 20 * widget.scale,
+      ),
       title: Text(
         isEditing ? 'Editar Veículo' : 'Novo Veículo',
         style: TextStyle(
@@ -115,11 +122,14 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(
-                    color: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00),
+                    color: isDark
+                        ? const Color(0xFF8B4DDE)
+                        : const Color(0xFFFF8A00),
                     width: 2,
                   ),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12 * widget.scale, vertical: 10 * widget.scale),
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12 * widget.scale, vertical: 10 * widget.scale),
               ),
             ),
             SizedBox(height: 12 * widget.scale),
@@ -137,39 +147,57 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                   ),
                 ),
                 SizedBox(height: 8 * widget.scale),
-                Wrap(
-                  spacing: 8 * widget.scale,
-                  children: VehicleType.values.map((type) {
-                    final isSelected = _selectedType == type;
-                    return SizedBox(
-                      width: (MediaQuery.of(context).size.width - 48 * widget.scale) / 3,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => setState(() => _selectedType = type),
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 8 * widget.scale),
-                            decoration: BoxDecoration(
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final itemWidth =
+                        (constraints.maxWidth - 16 * widget.scale) / 3;
+                    return Wrap(
+                      spacing: 8 * widget.scale,
+                      runSpacing: 8 * widget.scale,
+                      children: VehicleType.values.map((type) {
+                        final isSelected = _selectedType == type;
+                        return SizedBox(
+                          width: itemWidth,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => setState(() => _selectedType = type),
                               borderRadius: BorderRadius.circular(8),
-                              color: isSelected
-                                  ? (isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00))
-                                  : (isDark ? const Color(0xFF1A1D24) : const Color(0xFFF0F0F0)),
-                            ),
-                            child: Text(
-                              type.display,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12 * widget.scale,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 8 * widget.scale),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: isSelected
+                                      ? (isDark
+                                          ? const Color(0xFF8B4DDE)
+                                          : const Color(0xFFFF8A00))
+                                      : (isDark
+                                          ? const Color(0xFF1A1D24)
+                                          : const Color(0xFFF0F0F0)),
+                                ),
+                                child: Text(
+                                  type.display,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : (isDark
+                                            ? Colors.grey[300]
+                                            : Colors.grey[700]),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12 * widget.scale,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
+                  },
                 ),
               ],
             ),
@@ -178,7 +206,8 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
             // Speed field
             TextField(
               controller: _speedController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               style: TextStyle(
                 color: isDark ? Colors.white : const Color(0xFF1E1E1E),
               ),
@@ -193,11 +222,14 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(
-                    color: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00),
+                    color: isDark
+                        ? const Color(0xFF8B4DDE)
+                        : const Color(0xFFFF8A00),
                     width: 2,
                   ),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12 * widget.scale, vertical: 10 * widget.scale),
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12 * widget.scale, vertical: 10 * widget.scale),
               ),
             ),
             SizedBox(height: 12 * widget.scale),
@@ -205,7 +237,8 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
             // Capacity field
             TextField(
               controller: _capacityController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               style: TextStyle(
                 color: isDark ? Colors.white : const Color(0xFF1E1E1E),
               ),
@@ -220,11 +253,14 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(
-                    color: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00),
+                    color: isDark
+                        ? const Color(0xFF8B4DDE)
+                        : const Color(0xFFFF8A00),
                     width: 2,
                   ),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12 * widget.scale, vertical: 10 * widget.scale),
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12 * widget.scale, vertical: 10 * widget.scale),
               ),
             ),
             SizedBox(height: 12 * widget.scale),
@@ -232,7 +268,8 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
             // Weight field
             TextField(
               controller: _weightController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               style: TextStyle(
                 color: isDark ? Colors.white : const Color(0xFF1E1E1E),
               ),
@@ -247,11 +284,14 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(
-                    color: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00),
+                    color: isDark
+                        ? const Color(0xFF8B4DDE)
+                        : const Color(0xFFFF8A00),
                     width: 2,
                   ),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12 * widget.scale, vertical: 10 * widget.scale),
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12 * widget.scale, vertical: 10 * widget.scale),
               ),
             ),
             SizedBox(height: 12 * widget.scale),
@@ -267,7 +307,9 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                 ),
               ),
               subtitle: Text(
-                widget.vehicle?.isAvailable != true ? 'Marque como disponível para usar em rotas' : 'Veículo pronto para uso',
+                widget.vehicle?.isAvailable != true
+                    ? 'Marque como disponível para usar em rotas'
+                    : 'Veículo pronto para uso',
                 style: TextStyle(
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
                   fontSize: 12 * widget.scale,
@@ -275,7 +317,8 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
               ),
               value: _isAvailable,
               onChanged: (value) => setState(() => _isAvailable = value),
-              activeThumbColor: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00),
+              activeThumbColor:
+                  isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00),
               contentPadding: EdgeInsets.zero,
             ),
           ],

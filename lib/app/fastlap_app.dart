@@ -35,7 +35,8 @@ class _FastLapAppState extends State<FastLapApp> {
                 settings: settings,
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
-                pageBuilder: (_, __, ___) => builder(context, settings.arguments),
+                pageBuilder: (_, __, ___) =>
+                    builder(context, settings.arguments),
               );
             },
           );
@@ -44,13 +45,15 @@ class _FastLapAppState extends State<FastLapApp> {
     );
   }
 
-  static final Map<String, Widget Function(BuildContext, Object?)> _routeBuilders = {
+  static final Map<String, Widget Function(BuildContext, Object?)>
+      _routeBuilders = {
     '/login': (context, args) => const LoginPage(),
   };
 
   ThemeData _buildLightTheme() {
     const seed = Color(0xFFE86710);
-    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light);
+    final scheme =
+        ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light);
 
     return ThemeData(
       useMaterial3: true,
@@ -72,7 +75,8 @@ class _FastLapAppState extends State<FastLapApp> {
 
   ThemeData _buildDarkTheme() {
     const seed = Color(0xFF6A5CFF);
-    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark);
+    final scheme =
+        ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark);
 
     return ThemeData(
       useMaterial3: true,

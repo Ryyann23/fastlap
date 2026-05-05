@@ -61,14 +61,16 @@ class AuthTextField extends StatelessWidget {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: isDark ? const Color(0xFF2E3345) : const Color(0xFF9D9D9D),
+                color:
+                    isDark ? const Color(0xFF2E3345) : const Color(0xFF9D9D9D),
                 width: 1,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE86710),
+                color:
+                    isDark ? const Color(0xFFB06CFF) : const Color(0xFFE86710),
                 width: 1.5,
               ),
             ),

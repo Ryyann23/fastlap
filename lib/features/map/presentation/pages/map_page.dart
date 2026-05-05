@@ -10,6 +10,7 @@ import '../../../routes/presentation/pages/routes_page.dart';
 import '../../../../shared/data/route_model.dart';
 import '../../../../shared/data/route_service.dart';
 import '../../../../shared/data/routing_service.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../../../../shared/widgets/user_header_avatar.dart';
@@ -24,7 +25,6 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   final LatLng _fallbackCenter = const LatLng(-4.8645, -43.3573);
-
 
   // Cache de polylines com rotas reais (chave = route.id)
   final Map<String, List<LatLng>> _routePolylines = {};
@@ -63,7 +63,8 @@ class _MapPageState extends State<MapPage> {
     if (routes.isEmpty) return;
 
     // Verifica se há rotas novas que ainda não foram buscadas
-    final needsFetch = routes.where((r) => !_routePolylines.containsKey(r.id)).toList();
+    final needsFetch =
+        routes.where((r) => !_routePolylines.containsKey(r.id)).toList();
     if (needsFetch.isEmpty) return;
 
     setState(() => _loadingRoutes = true);
@@ -89,9 +90,8 @@ class _MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
+    final scale = AppResponsive.scale(context);
+    final horizontalPadding = AppResponsive.pagePadding(context);
     final dateText = _formatBrasiliaDate();
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
@@ -106,8 +106,8 @@ class _MapPageState extends State<MapPage> {
 
     for (final route in routes) {
       // Usar rota real do OSRM se disponível, senão linha reta como fallback
-      final polylinePoints = _routePolylines[route.id]
-          ?? route.points.map((p) => p.latLng).toList();
+      final polylinePoints = _routePolylines[route.id] ??
+          route.points.map((p) => p.latLng).toList();
 
       allPolylines.add(
         Polyline(
@@ -166,7 +166,8 @@ class _MapPageState extends State<MapPage> {
                     children: [
                       SizedBox(
                         height: 34 * scale,
-                        child: Image.asset('src/img/logo.png', fit: BoxFit.contain),
+                        child: Image.asset('src/img/logo.png',
+                            fit: BoxFit.contain),
                       ),
                       const Spacer(),
                       ThemeModeButton(scale: scale),
@@ -180,7 +181,7 @@ class _MapPageState extends State<MapPage> {
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
-                      fontSize: 42 * scale,
+                      fontSize: 36 * scale,
                     ),
                   ),
                   SizedBox(height: 3 * scale),
@@ -207,18 +208,15 @@ class _MapPageState extends State<MapPage> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.fastlap.app',
                     ),
                     if (allPolylines.isNotEmpty)
                       PolylineLayer(polylines: allPolylines),
-                    if (allMarkers.isNotEmpty)
-                      MarkerLayer(markers: allMarkers),
+                    if (allMarkers.isNotEmpty) MarkerLayer(markers: allMarkers),
                   ],
                 ),
-
-
-
 
                 // Card de rota ativa na parte inferior
                 if (activeRoute != null)
@@ -237,7 +235,8 @@ class _MapPageState extends State<MapPage> {
                     right: 0,
                     child: Center(
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16 * scale, vertical: 8 * scale),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 16 * scale, vertical: 8 * scale),
                         decoration: BoxDecoration(
                           color: isDark
                               ? const Color(0xFF1A1D2A).withValues(alpha: 0.92)
@@ -252,7 +251,9 @@ class _MapPageState extends State<MapPage> {
                               height: 16 * scale,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                                color: isDark
+                                    ? const Color(0xFFB06CFF)
+                                    : const Color(0xFFE67A23),
                               ),
                             ),
                             SizedBox(width: 8 * scale),
@@ -260,7 +261,9 @@ class _MapPageState extends State<MapPage> {
                               'Calculando rota...',
                               style: TextStyle(
                                 fontSize: 13 * scale,
-                                color: isDark ? Colors.white70 : const Color(0xFF555555),
+                                color: isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF555555),
                               ),
                             ),
                           ],
@@ -296,22 +299,27 @@ class _MapPageState extends State<MapPage> {
                           Icon(
                             Icons.alt_route_rounded,
                             size: 40 * scale,
-                            color: isDark ? Colors.white24 : const Color(0xFFCCCCCC),
+                            color: isDark
+                                ? Colors.white24
+                                : const Color(0xFFCCCCCC),
                           ),
                           SizedBox(height: 8 * scale),
                           Text(
-'Nenhuma rota ativa para exibir',
+                            'Nenhuma rota ativa para exibir',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 15 * scale,
-                              color: isDark ? Colors.white38 : const Color(0xFF999999),
+                              color: isDark
+                                  ? Colors.white38
+                                  : const Color(0xFF999999),
                             ),
                           ),
                           SizedBox(height: 8 * scale),
                           GestureDetector(
                             onTap: () {
                               Navigator.of(context).pushReplacement(
-                                MaterialPageRoute<void>(builder: (_) => const RoutesPage()),
+                                MaterialPageRoute<void>(
+                                    builder: (_) => const RoutesPage()),
                               );
                             },
                             child: Text(
@@ -319,7 +327,9 @@ class _MapPageState extends State<MapPage> {
                               style: TextStyle(
                                 fontSize: 15 * scale,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                                color: isDark
+                                    ? const Color(0xFFB06CFF)
+                                    : const Color(0xFFE67A23),
                               ),
                             ),
                           ),
@@ -448,7 +458,8 @@ class _MapPageState extends State<MapPage> {
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 6 * scale),
+                padding: EdgeInsets.symmetric(
+                    horizontal: 12 * scale, vertical: 6 * scale),
                 decoration: BoxDecoration(
                   color: statusBgColor,
                   borderRadius: BorderRadius.circular(18),
@@ -492,7 +503,10 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
           SizedBox(height: 8 * scale),
-          Container(height: 1, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+          Container(
+              height: 1,
+              color:
+                  isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
 
           // Ações
           SizedBox(
@@ -511,31 +525,52 @@ class _MapPageState extends State<MapPage> {
       case RouteStatus.ativa:
         return Row(
           children: [
-            Expanded(child: _actionRow(Icons.pause_circle_outline, 'Pausar', scale, onTap: () {
+            Expanded(
+                child: _actionRow(Icons.pause_circle_outline, 'Pausar', scale,
+                    onTap: () {
               RouteService.instance.updateStatus(route.id, RouteStatus.pausada);
             })),
-            Container(width: 1, height: 24 * scale, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
-            Expanded(child: _actionRow(Icons.check_circle_outline, 'Concluir', scale, onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.concluida);
+            Container(
+                width: 1,
+                height: 24 * scale,
+                color:
+                    isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+            Expanded(
+                child: _actionRow(Icons.check_circle_outline, 'Concluir', scale,
+                    onTap: () {
+              RouteService.instance
+                  .updateStatus(route.id, RouteStatus.concluida);
             })),
           ],
         );
       case RouteStatus.pausada:
         return Row(
           children: [
-            Expanded(child: _actionRow(Icons.play_circle_outline, 'Retomar', scale, onTap: () {
+            Expanded(
+                child: _actionRow(Icons.play_circle_outline, 'Retomar', scale,
+                    onTap: () {
               RouteService.instance.updateStatus(route.id, RouteStatus.ativa);
             })),
-            Container(width: 1, height: 24 * scale, color: isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
-            Expanded(child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale, onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.cancelada);
+            Container(
+                width: 1,
+                height: 24 * scale,
+                color:
+                    isDark ? const Color(0xFF31364A) : const Color(0xFFE2E2E2)),
+            Expanded(
+                child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale,
+                    onTap: () {
+              RouteService.instance
+                  .updateStatus(route.id, RouteStatus.cancelada);
             })),
           ],
         );
       default:
         return Row(
           children: [
-            Expanded(child: _actionRow(Icons.receipt_long_rounded, 'Ver Detalhes', scale, onTap: () {
+            Expanded(
+                child: _actionRow(
+                    Icons.receipt_long_rounded, 'Ver Detalhes', scale,
+                    onTap: () {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute<void>(builder: (_) => const RoutesPage()),
               );
@@ -582,7 +617,8 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Widget _actionRow(IconData icon, String label, double scale, {VoidCallback? onTap}) {
+  Widget _actionRow(IconData icon, String label, double scale,
+      {VoidCallback? onTap}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
@@ -609,6 +645,3 @@ class _MapPageState extends State<MapPage> {
     );
   }
 }
-
-
-

@@ -18,16 +18,16 @@ class RoutingService {
   Future<List<LatLng>> getRoute(List<LatLng> waypoints) async {
     if (waypoints.length < 2) return waypoints;
 
-    final cacheKey = waypoints.map((p) => '${p.latitude},${p.longitude}').join(';');
+    final cacheKey =
+        waypoints.map((p) => '${p.latitude},${p.longitude}').join(';');
     if (_cache.containsKey(cacheKey)) {
       return _cache[cacheKey]!;
     }
 
     try {
       // Formatar coordenadas para OSRM: lng,lat;lng,lat;...
-      final coords = waypoints
-          .map((p) => '${p.longitude},${p.latitude}')
-          .join(';');
+      final coords =
+          waypoints.map((p) => '${p.longitude},${p.latitude}').join(';');
 
       final url = Uri.parse(
         'https://router.project-osrm.org/route/v1/driving/$coords'
@@ -35,8 +35,8 @@ class RoutingService {
       );
 
       final response = await http.get(url).timeout(
-        const Duration(seconds: 10),
-      );
+            const Duration(seconds: 10),
+          );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;

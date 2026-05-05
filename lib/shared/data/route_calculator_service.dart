@@ -4,7 +4,8 @@ import 'vehicle_service.dart';
 
 /// Service to calculate route information based on the selected vehicle
 class RouteCalculatorService {
-  static final RouteCalculatorService _instance = RouteCalculatorService._internal();
+  static final RouteCalculatorService _instance =
+      RouteCalculatorService._internal();
 
   factory RouteCalculatorService() {
     return _instance;
@@ -23,7 +24,8 @@ class RouteCalculatorService {
     final vehicle = _vehicleService.getVehicleById(route.vehicleId!);
     if (vehicle == null) return null;
 
-    final travelTimeMinutes = vehicle.calculateTravelTimeMinutes(route.totalDistanceKm);
+    final travelTimeMinutes =
+        vehicle.calculateTravelTimeMinutes(route.totalDistanceKm);
     return travelTimeMinutes.toInt();
   }
 

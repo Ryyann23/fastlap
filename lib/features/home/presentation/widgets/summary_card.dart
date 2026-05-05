@@ -8,6 +8,7 @@ class SummaryCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.scale,
+    this.compact = false,
   });
 
   final String title;
@@ -15,14 +16,17 @@ class SummaryCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final double scale;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final compactScale = compact ? scale * 0.88 : scale;
+
     return Container(
-      width: 154 * scale,
-      padding: EdgeInsets.all(12 * scale),
+      width: double.infinity,
+      padding: EdgeInsets.all(compact ? 10 * scale : 12 * scale),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
@@ -43,8 +47,8 @@ class SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white, size: 24 * scale),
-          SizedBox(height: 8 * scale),
+          Icon(icon, color: Colors.white, size: 24 * compactScale),
+          SizedBox(height: 6 * compactScale),
           Text(
             title,
             maxLines: 1,
@@ -52,10 +56,10 @@ class SummaryCard extends StatelessWidget {
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.88),
               fontWeight: FontWeight.w600,
-              fontSize: 11.5 * scale,
+              fontSize: 11.5 * compactScale,
             ),
           ),
-          SizedBox(height: 5 * scale),
+          SizedBox(height: 5 * compactScale),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
@@ -63,13 +67,13 @@ class SummaryCard extends StatelessWidget {
               value,
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 32 * scale,
+                fontSize: 29 * compactScale,
                 fontWeight: FontWeight.w700,
                 height: 1,
               ),
             ),
           ),
-          SizedBox(height: 4 * scale),
+          SizedBox(height: 4 * compactScale),
           Expanded(
             child: Align(
               alignment: Alignment.bottomLeft,
@@ -79,7 +83,7 @@ class SummaryCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.95),
-                  fontSize: 11.5 * scale,
+                  fontSize: 11.5 * compactScale,
                   height: 1.2,
                 ),
               ),

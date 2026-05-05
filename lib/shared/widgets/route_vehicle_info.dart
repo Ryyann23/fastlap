@@ -68,8 +68,11 @@ class _RouteVehicleInfoState extends State<RouteVehicleInfo> {
       );
     }
 
-    final travelTimeMinutes = _calculatorService.calculateRouteTravelTimeMinutes(widget.route);
-    final formattedTime = travelTimeMinutes != null ? _calculatorService.formatTravelTime(travelTimeMinutes) : 'N/A';
+    final travelTimeMinutes =
+        _calculatorService.calculateRouteTravelTimeMinutes(widget.route);
+    final formattedTime = travelTimeMinutes != null
+        ? _calculatorService.formatTravelTime(travelTimeMinutes)
+        : 'N/A';
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -160,7 +163,9 @@ class _RouteVehicleInfoState extends State<RouteVehicleInfo> {
                       style: TextStyle(
                         fontSize: 16 * widget.scale,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00),
+                        color: isDark
+                            ? const Color(0xFF8B4DDE)
+                            : const Color(0xFFFF8A00),
                       ),
                     ),
                   ],

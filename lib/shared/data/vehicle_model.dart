@@ -11,7 +11,7 @@ extension VehicleTypeDisplay on VehicleType {
 }
 
 class Vehicle {
-Vehicle({
+  Vehicle({
     required this.id,
     required this.name,
     required this.type,

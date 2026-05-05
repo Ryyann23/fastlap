@@ -38,7 +38,8 @@ class VehicleService extends ChangeNotifier {
   Vehicle? _selectedVehicle;
 
   List<Vehicle> get vehicles => List.unmodifiable(_vehicles);
-  List<Vehicle> get availableVehicles => _vehicles.where((v) => v.isAvailable).toList();
+  List<Vehicle> get availableVehicles =>
+      _vehicles.where((v) => v.isAvailable).toList();
   Vehicle? get selectedVehicle => _selectedVehicle;
 
   void addVehicle(Vehicle vehicle) {

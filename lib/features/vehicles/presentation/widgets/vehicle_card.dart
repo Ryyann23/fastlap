@@ -30,7 +30,8 @@ class VehicleCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 12 * scale),
+      padding:
+          EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 12 * scale),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF07090E) : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -75,7 +76,6 @@ class VehicleCard extends StatelessWidget {
                   ],
                 ),
               ),
-
             ],
           ),
           SizedBox(height: 8 * scale),
@@ -133,25 +133,28 @@ class VehicleCard extends StatelessWidget {
           Row(
             children: [
               const Spacer(),
-              Row(
-                children: [
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: onEdit,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: isDark ? const Color(0xFF1A1D24) : const Color(0xFFF0F0F0),
-                        ),
-                        child: Icon(Icons.edit, size: 14 * scale, color: isDark ? Colors.grey[300] : Colors.grey[700]),
+              Row(children: [
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onEdit,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 8 * scale, vertical: 6 * scale),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: isDark
+                            ? const Color(0xFF1A1D24)
+                            : const Color(0xFFF0F0F0),
                       ),
+                      child: Icon(Icons.edit,
+                          size: 14 * scale,
+                          color: isDark ? Colors.grey[300] : Colors.grey[700]),
                     ),
                   ),
-                ]
-              ),
+                ),
+              ]),
               SizedBox(width: 6 * scale),
               Material(
                 color: Colors.transparent,
@@ -159,12 +162,14 @@ class VehicleCard extends StatelessWidget {
                   onTap: onDelete,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 8 * scale, vertical: 6 * scale),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
                       color: Colors.red.withValues(alpha: 0.1),
                     ),
-                    child: Icon(Icons.delete, size: 14 * scale, color: Colors.red[400]),
+                    child: Icon(Icons.delete,
+                        size: 14 * scale, color: Colors.red[400]),
                   ),
                 ),
               ),

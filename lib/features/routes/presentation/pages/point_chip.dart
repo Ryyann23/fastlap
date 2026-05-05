@@ -22,7 +22,8 @@ class PointChip extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 10 * scale),
+      padding:
+          EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 10 * scale),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
         borderRadius: BorderRadius.circular(14 * scale),
@@ -62,7 +63,8 @@ class PointChip extends StatelessWidget {
             ),
           ),
           if (isFixed)
-            Icon(Icons.lock_outline, color: const Color(0xFF858585), size: 16 * scale)
+            Icon(Icons.lock_outline,
+                color: const Color(0xFF858585), size: 16 * scale)
           else
             GestureDetector(
               onTap: onRemove,
@@ -77,4 +79,3 @@ class PointChip extends StatelessWidget {
     );
   }
 }
-

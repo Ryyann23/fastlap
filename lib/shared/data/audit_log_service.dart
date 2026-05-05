@@ -64,7 +64,8 @@ class AuditLogEntry {
       description: (map['description'] ?? '').toString(),
       entityType: (map['entityType'] ?? '').toString(),
       entityId: (map['entityId'] ?? '').toString(),
-      createdAt: DateTime.tryParse((map['createdAt'] ?? '').toString()) ?? DateTime.now(),
+      createdAt: DateTime.tryParse((map['createdAt'] ?? '').toString()) ??
+          DateTime.now(),
       userName: map['userName']?.toString(),
       metadata: map['metadata'] is Map
           ? Map<String, dynamic>.from(map['metadata'] as Map)
@@ -95,7 +96,8 @@ class AuditLogService extends ChangeNotifier {
         ..clear()
         ..addAll(
           decoded
-              .map((item) => AuditLogEntry.fromMap(Map<String, dynamic>.from(item as Map)))
+              .map((item) =>
+                  AuditLogEntry.fromMap(Map<String, dynamic>.from(item as Map)))
               .toList(),
         );
     }

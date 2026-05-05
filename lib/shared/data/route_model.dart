@@ -52,7 +52,8 @@ class AppRoute {
     const distance = Distance();
     var total = 0.0;
     for (var i = 0; i < points.length - 1; i++) {
-      total += distance.as(LengthUnit.Kilometer, points[i].latLng, points[i + 1].latLng);
+      total += distance.as(
+          LengthUnit.Kilometer, points[i].latLng, points[i + 1].latLng);
     }
     return total;
   }

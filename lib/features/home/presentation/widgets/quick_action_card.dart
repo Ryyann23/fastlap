@@ -17,7 +17,8 @@ class QuickActionCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 14 * scale),
+      padding:
+          EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 10 * scale),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF07090E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -32,8 +33,8 @@ class QuickActionCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 40 * scale,
-            height: 40 * scale,
+            width: 36 * scale,
+            height: 36 * scale,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               gradient: LinearGradient(
@@ -46,15 +47,17 @@ class QuickActionCard extends StatelessWidget {
             ),
             child: Icon(icon, color: Colors.white, size: 22 * scale),
           ),
-          SizedBox(width: 10 * scale),
+          SizedBox(width: 8 * scale),
           Expanded(
             child: Text(
               title,
               style: TextStyle(
-                fontSize: 16 * scale,
+                fontSize: 14 * scale,
                 fontWeight: FontWeight.w500,
                 color: isDark ? Colors.white : const Color(0xFF1E1E1E),
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/data/vehicle_model.dart';
 import '../../../../shared/data/vehicle_service.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../widgets/vehicle_card.dart';
 import '../widgets/vehicle_form_dialog.dart';
@@ -79,16 +80,14 @@ class _VehiclesPageState extends State<VehiclesPage> {
   }
 
   double _getScale() {
-    final size = MediaQuery.of(context).size;
-    return (size.width / 393).clamp(0.85, 1.15).toDouble();
+    return AppResponsive.scale(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scale = _getScale();
-    final size = MediaQuery.of(context).size;
-    final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
+    final horizontalPadding = AppResponsive.pagePadding(context);
 
     return WillPopScope(
       onWillPop: () async {
@@ -111,8 +110,16 @@ class _VehiclesPageState extends State<VehiclesPage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isDark
-                      ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
-                      : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)],
+                      ? const [
+                          Color(0xFF6A35C8),
+                          Color(0xFF8A46DB),
+                          Color(0xFFAE66F2)
+                        ]
+                      : const [
+                          Color(0xFFFF8A00),
+                          Color(0xFFFF6A00),
+                          Color(0xFFD84A05)
+                        ],
                   stops: const [0.05, 0.55, 1],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -130,8 +137,10 @@ class _VehiclesPageState extends State<VehiclesPage> {
                     Row(
                       children: [
                         IconButton(
-                          onPressed: () => Navigator.pop(context, _vehicleService.selectedVehicle),
-                          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                          onPressed: () => Navigator.pop(
+                              context, _vehicleService.selectedVehicle),
+                          icon: const Icon(Icons.arrow_back_rounded,
+                              color: Colors.white),
                         ),
                         const Spacer(),
                         ThemeModeButton(scale: scale),
@@ -143,7 +152,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
-                        fontSize: 34 * scale,
+                        fontSize: 30 * scale,
                       ),
                     ),
                     SizedBox(height: 3 * scale),
@@ -182,7 +191,9 @@ class _VehiclesPageState extends State<VehiclesPage> {
                             style: TextStyle(
                               fontSize: 16 * scale,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : const Color(0xFF1E1E1E),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1E1E1E),
                             ),
                           ),
                           SizedBox(height: 8 * scale),
@@ -190,7 +201,8 @@ class _VehiclesPageState extends State<VehiclesPage> {
                             'Adicione seu primeiro veículo para começar',
                             style: TextStyle(
                               fontSize: 14 * scale,
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -205,7 +217,9 @@ class _VehiclesPageState extends State<VehiclesPage> {
                             style: TextStyle(
                               fontSize: 18 * scale,
                               fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : const Color(0xFF1E1E1E),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1E1E1E),
                             ),
                           ),
                           SizedBox(height: 12 * scale),
@@ -215,7 +229,8 @@ class _VehiclesPageState extends State<VehiclesPage> {
                               child: VehicleCard(
                                 vehicle: vehicle,
                                 scale: scale,
-                                onEdit: () => _showVehicleForm(vehicle: vehicle),
+                                onEdit: () =>
+                                    _showVehicleForm(vehicle: vehicle),
                                 onDelete: () => _deleteVehicle(vehicle),
                               ),
                             );

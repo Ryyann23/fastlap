@@ -7,6 +7,7 @@ import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../routes/presentation/pages/routes_page.dart';
 import '../../../../shared/data/route_model.dart';
 import '../../../../shared/data/route_service.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 import '../../../../shared/widgets/user_header_avatar.dart';
@@ -40,7 +41,8 @@ class _HistoryPageState extends State<HistoryPage> {
 
   String _formatBrasiliaDateHeader() {
     final brasiliaNow = DateTime.now().toUtc().add(const Duration(hours: -3));
-    final raw = DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
+    final raw =
+        DateFormat("EEE, d 'de' MMMM | HH:mm", 'pt_BR').format(brasiliaNow);
     if (raw.isEmpty) return '';
     final withoutDot = raw.replaceAll('.', '');
     return withoutDot[0].toUpperCase() + withoutDot.substring(1);
@@ -67,9 +69,8 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
+    final scale = AppResponsive.scale(context);
+    final horizontalPadding = AppResponsive.pagePadding(context);
     final dateHeader = _formatBrasiliaDateHeader();
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
@@ -110,7 +111,8 @@ class _HistoryPageState extends State<HistoryPage> {
                     children: [
                       SizedBox(
                         height: 34 * scale,
-                        child: Image.asset('src/img/logo.png', fit: BoxFit.contain),
+                        child: Image.asset('src/img/logo.png',
+                            fit: BoxFit.contain),
                       ),
                       const Spacer(),
                       ThemeModeButton(scale: scale),
@@ -124,7 +126,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
-                      fontSize: 36 * scale,
+                      fontSize: 32 * scale,
                     ),
                   ),
                   SizedBox(height: 4 * scale),
@@ -152,14 +154,18 @@ class _HistoryPageState extends State<HistoryPage> {
                               Icon(
                                 Icons.history,
                                 size: 64 * scale,
-                                color: isDark ? Colors.white24 : const Color(0xFFCCCCCC),
+                                color: isDark
+                                    ? Colors.white24
+                                    : const Color(0xFFCCCCCC),
                               ),
                               SizedBox(height: 12 * scale),
                               Text(
                                 'Nenhuma rota no histórico',
                                 style: TextStyle(
                                   fontSize: 17 * scale,
-                                  color: isDark ? Colors.white38 : const Color(0xFF999999),
+                                  color: isDark
+                                      ? Colors.white38
+                                      : const Color(0xFF999999),
                                 ),
                               ),
                               SizedBox(height: 6 * scale),
@@ -167,7 +173,9 @@ class _HistoryPageState extends State<HistoryPage> {
                                 'Rotas concluídas ou canceladas aparecerão aqui',
                                 style: TextStyle(
                                   fontSize: 14 * scale,
-                                  color: isDark ? Colors.white24 : const Color(0xFFBBBBBB),
+                                  color: isDark
+                                      ? Colors.white24
+                                      : const Color(0xFFBBBBBB),
                                 ),
                               ),
                             ],
@@ -187,7 +195,6 @@ class _HistoryPageState extends State<HistoryPage> {
                           },
                         ),
                 ),
-
               ],
             ),
           ),
@@ -198,16 +205,20 @@ class _HistoryPageState extends State<HistoryPage> {
         currentTab: FastlapTab.historico,
         onTabSelected: (tab) {
           if (tab == FastlapTab.inicio) {
-            Navigator.of(context).pushReplacement(noAnimationRoute(const HomePage()));
+            Navigator.of(context)
+                .pushReplacement(noAnimationRoute(const HomePage()));
           }
           if (tab == FastlapTab.rotas) {
-            Navigator.of(context).pushReplacement(noAnimationRoute(const RoutesPage()));
+            Navigator.of(context)
+                .pushReplacement(noAnimationRoute(const RoutesPage()));
           }
           if (tab == FastlapTab.mapa) {
-            Navigator.of(context).pushReplacement(noAnimationRoute(const MapPage()));
+            Navigator.of(context)
+                .pushReplacement(noAnimationRoute(const MapPage()));
           }
           if (tab == FastlapTab.perfil) {
-            Navigator.of(context).pushReplacement(noAnimationRoute(const ProfilePage()));
+            Navigator.of(context)
+                .pushReplacement(noAnimationRoute(const ProfilePage()));
           }
         },
       ),

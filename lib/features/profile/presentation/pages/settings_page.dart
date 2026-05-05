@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../auth/data/auth_service.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -17,7 +18,8 @@ class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
 
   bool _loadingUser = true;
@@ -72,7 +74,8 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!mounted) return;
     setState(() => _savingProfile = false);
 
-    _showMessage(result.message ?? (result.ok ? 'Perfil atualizado.' : 'Erro ao atualizar.'));
+    _showMessage(result.message ??
+        (result.ok ? 'Perfil atualizado.' : 'Erro ao atualizar.'));
   }
 
   Future<void> _changePassword() async {
@@ -97,7 +100,8 @@ class _SettingsPageState extends State<SettingsPage> {
       _newPasswordController.clear();
     }
 
-    _showMessage(result.message ?? (result.ok ? 'Senha atualizada.' : 'Falha ao atualizar senha.'));
+    _showMessage(result.message ??
+        (result.ok ? 'Senha atualizada.' : 'Falha ao atualizar senha.'));
   }
 
   Future<void> _deleteProfile() async {
@@ -105,10 +109,15 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Apagar perfil'),
-        content: const Text('Essa acao remove sua conta localmente neste dispositivo. Continuar?'),
+        content: const Text(
+            'Essa acao remove sua conta localmente neste dispositivo. Continuar?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Apagar')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Apagar')),
         ],
       ),
     );
@@ -125,15 +134,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
+    final scale = AppResponsive.scale(context);
+    final horizontalPadding = AppResponsive.pagePadding(context);
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
         : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
@@ -144,7 +153,8 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(horizontalPadding, 10 * scale, horizontalPadding, 16 * scale),
+            padding: EdgeInsets.fromLTRB(
+                horizontalPadding, 10 * scale, horizontalPadding, 16 * scale),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: headerGradient,
@@ -166,7 +176,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                        icon: const Icon(Icons.arrow_back_rounded,
+                            color: Colors.white),
                       ),
                       const Spacer(),
                       ThemeModeButton(scale: scale),
@@ -207,6 +218,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: [
                         _sectionCard(
                           context,
+                          scale,
                           title: 'Conta',
                           child: Column(
                             children: [
@@ -239,9 +251,12 @@ class _SettingsPageState extends State<SettingsPage> {
                                 width: double.infinity,
                                 height: 48 * scale,
                                 child: ElevatedButton(
-                                  onPressed: _savingProfile ? null : _saveProfile,
+                                  onPressed:
+                                      _savingProfile ? null : _saveProfile,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF6B00),
+                                    backgroundColor: isDark
+                                        ? const Color(0xFF8B4DDE)
+                                        : const Color(0xFFFF6B00),
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -265,6 +280,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         SizedBox(height: 12 * scale),
                         _sectionCard(
                           context,
+                          scale,
                           title: 'Seguranca',
                           child: Column(
                             children: [
@@ -290,12 +306,18 @@ class _SettingsPageState extends State<SettingsPage> {
                                 width: double.infinity,
                                 height: 48 * scale,
                                 child: OutlinedButton(
-                                  onPressed: _changingPassword ? null : _changePassword,
+                                  onPressed: _changingPassword
+                                      ? null
+                                      : _changePassword,
                                   style: OutlinedButton.styleFrom(
                                     side: BorderSide(
-                                      color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE86710),
+                                      color: isDark
+                                          ? const Color(0xFFB06CFF)
+                                          : const Color(0xFFE86710),
                                     ),
-                                    foregroundColor: isDark ? Colors.white : const Color(0xFF1D1D1D),
+                                    foregroundColor: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1D1D1D),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -304,7 +326,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                       ? const SizedBox(
                                           width: 20,
                                           height: 20,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2),
                                         )
                                       : const Text('Alterar senha'),
                                 ),
@@ -315,6 +338,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         SizedBox(height: 12 * scale),
                         _sectionCard(
                           context,
+                          scale,
                           title: 'Zona de risco',
                           child: SizedBox(
                             width: double.infinity,
@@ -322,7 +346,8 @@ class _SettingsPageState extends State<SettingsPage> {
                             child: OutlinedButton.icon(
                               onPressed: _deleteProfile,
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFFD14242)),
+                                side:
+                                    const BorderSide(color: Color(0xFFD14242)),
                                 foregroundColor: const Color(0xFFD14242),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -342,11 +367,12 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _sectionCard(BuildContext context, {required String title, required Widget child}) {
+  Widget _sectionCard(BuildContext context, double scale,
+      {required String title, required Widget child}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14 * scale),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -366,10 +392,10 @@ class _SettingsPageState extends State<SettingsPage> {
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF1A1A1A),
               fontWeight: FontWeight.w700,
-              fontSize: 18,
+              fontSize: 18 * scale,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10 * scale),
           child,
         ],
       ),

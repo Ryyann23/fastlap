@@ -5,6 +5,7 @@ import '../../../../shared/data/route_model.dart';
 import '../../../../shared/data/route_service.dart';
 import '../../../../shared/data/vehicle_model.dart';
 import '../../../../shared/data/vehicle_service.dart';
+import '../../../../shared/utils/app_responsive.dart';
 import 'point_chip.dart';
 
 class CreateRoutePage extends StatefulWidget {
@@ -69,7 +70,8 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
     }
     if (_selectedPoints.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione pelo menos 1 ponto de destino')),
+        const SnackBar(
+            content: Text('Selecione pelo menos 1 ponto de destino')),
       );
       return;
     }
@@ -92,9 +94,8 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final scale = (size.width / 393).clamp(0.85, 1.15).toDouble();
-    final horizontalPadding = (size.width * 0.04).clamp(12.0, 20.0).toDouble();
+    final scale = AppResponsive.scale(context);
+    final horizontalPadding = AppResponsive.pagePadding(context);
     final headerGradient = isDark
         ? const [Color(0xFF6A35C8), Color(0xFF8A46DB), Color(0xFFAE66F2)]
         : const [Color(0xFFFF8A00), Color(0xFFFF6A00), Color(0xFFD84A05)];
@@ -106,7 +107,8 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
         children: [
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(horizontalPadding, 10 * scale, horizontalPadding, 20 * scale),
+            padding: EdgeInsets.fromLTRB(
+                horizontalPadding, 10 * scale, horizontalPadding, 20 * scale),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: headerGradient,
@@ -132,7 +134,8 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22 * scale),
+                      child: Icon(Icons.arrow_back_rounded,
+                          color: Colors.white, size: 22 * scale),
                     ),
                   ),
                   SizedBox(width: 12 * scale),
@@ -150,7 +153,8 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
           ),
           Expanded(
             child: ListView(
-              padding: EdgeInsets.fromLTRB(horizontalPadding, 16 * scale, horizontalPadding, 16 * scale),
+              padding: EdgeInsets.fromLTRB(
+                  horizontalPadding, 16 * scale, horizontalPadding, 16 * scale),
               children: [
                 Text(
                   'Nome da Rota',
@@ -177,13 +181,17 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(
-                        color: isDark ? const Color(0xFF31364A) : const Color(0xFFD8D8D8),
+                        color: isDark
+                            ? const Color(0xFF31364A)
+                            : const Color(0xFFD8D8D8),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(
-                        color: isDark ? const Color(0xFF31364A) : const Color(0xFFD8D8D8),
+                        color: isDark
+                            ? const Color(0xFF31364A)
+                            : const Color(0xFFD8D8D8),
                       ),
                     ),
                   ),
@@ -225,12 +233,15 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                   GestureDetector(
                     onTap: () => _showAddPointDialog(scale, isDark),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16 * scale, vertical: 16 * scale),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 16 * scale, vertical: 16 * scale),
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                          color: isDark
+                              ? const Color(0xFFB06CFF)
+                              : const Color(0xFFE67A23),
                           width: 2,
                         ),
                       ),
@@ -239,7 +250,9 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                         children: [
                           Icon(
                             Icons.add_location_alt_outlined,
-                            color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                            color: isDark
+                                ? const Color(0xFFB06CFF)
+                                : const Color(0xFFE67A23),
                             size: 24 * scale,
                           ),
                           SizedBox(width: 12 * scale),
@@ -248,7 +261,9 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                             style: TextStyle(
                               fontSize: 16 * scale,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                              color: isDark
+                                  ? const Color(0xFFB06CFF)
+                                  : const Color(0xFFE67A23),
                             ),
                           ),
                         ],
@@ -282,19 +297,23 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                     }
                   },
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 14 * scale, vertical: 14 * scale),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 14 * scale, vertical: 14 * scale),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1A1D2A) : Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF31364A) : const Color(0xFFD8D8D8),
+                        color: isDark
+                            ? const Color(0xFF31364A)
+                            : const Color(0xFFD8D8D8),
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.directions_car_outlined,
-                          color: isDark ? Colors.white70 : const Color(0xFF858585),
+                          color:
+                              isDark ? Colors.white70 : const Color(0xFF858585),
                           size: 22 * scale,
                         ),
                         SizedBox(width: 10 * scale),
@@ -302,21 +321,30 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                           child: Text(
                             _selectedVehicleId == null
                                 ? 'Escolha um veículo disponível'
-                                : (VehicleService.instance.getVehicleById(_selectedVehicleId!)?.name ??
+                                : (VehicleService.instance
+                                        .getVehicleById(_selectedVehicleId!)
+                                        ?.name ??
                                     'Veículo selecionado'),
                             style: TextStyle(
                               fontSize: 15 * scale,
                               color: _selectedVehicleId == null
-                                  ? (isDark ? Colors.white54 : const Color(0xFF858585))
-                                  : (isDark ? Colors.white : const Color(0xFF1A1A1A)),
-                              fontWeight: _selectedVehicleId == null ? FontWeight.w400 : FontWeight.w500,
+                                  ? (isDark
+                                      ? Colors.white54
+                                      : const Color(0xFF858585))
+                                  : (isDark
+                                      ? Colors.white
+                                      : const Color(0xFF1A1A1A)),
+                              fontWeight: _selectedVehicleId == null
+                                  ? FontWeight.w400
+                                  : FontWeight.w500,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Icon(
                           Icons.keyboard_arrow_down_rounded,
-                          color: isDark ? Colors.white70 : const Color(0xFF858585),
+                          color:
+                              isDark ? Colors.white70 : const Color(0xFF858585),
                         ),
                       ],
                     ),
@@ -399,7 +427,8 @@ class _SearchPointsDialogState extends State<_SearchPointsDialog> {
       backgroundColor: isDark ? const Color(0xFF1A1D2A) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: BoxConstraints(maxHeight: 500 * scale, maxWidth: 400 * scale),
+        constraints:
+            BoxConstraints(maxHeight: 500 * scale, maxWidth: 400 * scale),
         padding: EdgeInsets.all(16 * scale),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -445,7 +474,8 @@ class _SearchPointsDialogState extends State<_SearchPointsDialog> {
                   color: isDark ? Colors.white70 : const Color(0xFF858585),
                 ),
                 filled: true,
-                fillColor: isDark ? const Color(0xFF0F1220) : const Color(0xFFF5F5F5),
+                fillColor:
+                    isDark ? const Color(0xFF0F1220) : const Color(0xFFF5F5F5),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -459,7 +489,8 @@ class _SearchPointsDialogState extends State<_SearchPointsDialog> {
                       child: Text(
                         'Nenhum ponto encontrado',
                         style: TextStyle(
-                          color: isDark ? Colors.white54 : const Color(0xFF858585),
+                          color:
+                              isDark ? Colors.white54 : const Color(0xFF858585),
                           fontSize: 14 * scale,
                         ),
                       ),
@@ -468,7 +499,9 @@ class _SearchPointsDialogState extends State<_SearchPointsDialog> {
                       itemCount: filtered.length,
                       separatorBuilder: (_, __) => Divider(
                         height: 1,
-                        color: isDark ? const Color(0xFF31364A) : const Color(0xFFEEEEEE),
+                        color: isDark
+                            ? const Color(0xFF31364A)
+                            : const Color(0xFFEEEEEE),
                       ),
                       itemBuilder: (context, index) {
                         final point = filtered[index];
@@ -477,32 +510,41 @@ class _SearchPointsDialogState extends State<_SearchPointsDialog> {
                           dense: true,
                           leading: Icon(
                             Icons.location_on_outlined,
-                            color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                            color: isDark
+                                ? const Color(0xFFB06CFF)
+                                : const Color(0xFFE67A23),
                             size: 22 * scale,
                           ),
                           title: Text(
                             point.name,
                             style: TextStyle(
                               fontSize: 15 * scale,
-                              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1A1A1A),
                             ),
                           ),
                           trailing: isSelected
                               ? Icon(
                                   Icons.check_circle,
-                                  color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                                  color: isDark
+                                      ? const Color(0xFFB06CFF)
+                                      : const Color(0xFFE67A23),
                                   size: 20 * scale,
                                 )
                               : Icon(
                                   Icons.radio_button_unchecked,
-                                  color: isDark ? Colors.white38 : const Color(0xFFB0B0B0),
+                                  color: isDark
+                                      ? Colors.white38
+                                      : const Color(0xFFB0B0B0),
                                   size: 20 * scale,
                                 ),
                           onTap: () {
                             setState(() {
                               if (isSelected) {
                                 _selectedIds.remove(point.id);
-                              } else if (_selectedIds.length < widget.maxSelection) {
+                              } else if (_selectedIds.length <
+                                  widget.maxSelection) {
                                 _selectedIds.add(point.id);
                               }
                             });
@@ -518,14 +560,19 @@ class _SearchPointsDialogState extends State<_SearchPointsDialog> {
                 onPressed: _selectedIds.isEmpty
                     ? null
                     : () {
-                        final selectedPoints =
-                            widget.points.where((p) => _selectedIds.contains(p.id)).toList();
+                        final selectedPoints = widget.points
+                            .where((p) => _selectedIds.contains(p.id))
+                            .toList();
                         Navigator.of(context).pop(selectedPoints);
                       },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark ? const Color(0xFF8B4DDE) : const Color(0xFFE67A23),
+                  backgroundColor: isDark
+                      ? const Color(0xFF8B4DDE)
+                      : const Color(0xFFE67A23),
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: isDark ? const Color(0xFF2A2E40) : const Color(0xFFE0E0E0),
+                  disabledBackgroundColor: isDark
+                      ? const Color(0xFF2A2E40)
+                      : const Color(0xFFE0E0E0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12 * scale),
                   ),
@@ -580,7 +627,8 @@ class _SearchVehiclesDialogState extends State<_SearchVehiclesDialog> {
     final isDark = widget.isDark;
     final filtered = widget.vehicles.where((v) {
       final q = _query.toLowerCase();
-      return v.name.toLowerCase().contains(q) || v.type.display.toLowerCase().contains(q);
+      return v.name.toLowerCase().contains(q) ||
+          v.type.display.toLowerCase().contains(q);
     }).toList();
 
     String emojiFor(VehicleType t) {
@@ -598,7 +646,8 @@ class _SearchVehiclesDialogState extends State<_SearchVehiclesDialog> {
       backgroundColor: isDark ? const Color(0xFF1A1D2A) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: BoxConstraints(maxHeight: 500 * scale, maxWidth: 400 * scale),
+        constraints:
+            BoxConstraints(maxHeight: 500 * scale, maxWidth: 400 * scale),
         padding: EdgeInsets.all(16 * scale),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -631,7 +680,8 @@ class _SearchVehiclesDialogState extends State<_SearchVehiclesDialog> {
                   color: isDark ? Colors.white70 : const Color(0xFF858585),
                 ),
                 filled: true,
-                fillColor: isDark ? const Color(0xFF0F1220) : const Color(0xFFF5F5F5),
+                fillColor:
+                    isDark ? const Color(0xFF0F1220) : const Color(0xFFF5F5F5),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -647,7 +697,9 @@ class _SearchVehiclesDialogState extends State<_SearchVehiclesDialog> {
                         child: Text(
                           'Nenhum veículo encontrado',
                           style: TextStyle(
-                            color: isDark ? Colors.white54 : const Color(0xFF858585),
+                            color: isDark
+                                ? Colors.white54
+                                : const Color(0xFF858585),
                             fontSize: 14 * scale,
                           ),
                         ),
@@ -658,11 +710,14 @@ class _SearchVehiclesDialogState extends State<_SearchVehiclesDialog> {
                       itemCount: filtered.length,
                       separatorBuilder: (_, __) => Divider(
                         height: 1,
-                        color: isDark ? const Color(0xFF31364A) : const Color(0xFFEEEEEE),
+                        color: isDark
+                            ? const Color(0xFF31364A)
+                            : const Color(0xFFEEEEEE),
                       ),
                       itemBuilder: (context, index) {
                         final vehicle = filtered[index];
-                        final isSelected = widget.selectedVehicleId == vehicle.id;
+                        final isSelected =
+                            widget.selectedVehicleId == vehicle.id;
                         return ListTile(
                           dense: true,
                           leading: Text(
@@ -673,21 +728,28 @@ class _SearchVehiclesDialogState extends State<_SearchVehiclesDialog> {
                             vehicle.name,
                             style: TextStyle(
                               fontSize: 15 * scale,
-                              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1A1A1A),
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                           subtitle: Text(
                             '${vehicle.speedPerKm.toStringAsFixed(0)} km/h • ${vehicle.carryCapacity.toStringAsFixed(0)} kg',
                             style: TextStyle(
                               fontSize: 12 * scale,
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
                             ),
                           ),
                           trailing: isSelected
                               ? Icon(
                                   Icons.check_circle,
-                                  color: isDark ? const Color(0xFFB06CFF) : const Color(0xFFE67A23),
+                                  color: isDark
+                                      ? const Color(0xFFB06CFF)
+                                      : const Color(0xFFE67A23),
                                   size: 20 * scale,
                                 )
                               : null,

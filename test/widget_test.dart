@@ -6,8 +6,8 @@ void main() {
   testWidgets('renderiza tela de login', (WidgetTester tester) async {
     await tester.pumpWidget(const FastLapApp());
 
-    expect(find.text('Pagina de Login'), findsOneWidget);
+    expect(find.text('Faca seu login'), findsOneWidget);
     expect(find.text('ENTRAR'), findsOneWidget);
-    expect(find.text('E-mail'), findsOneWidget);
+    expect(find.text('E-mail ou usuario'), findsOneWidget);
   });
 }
