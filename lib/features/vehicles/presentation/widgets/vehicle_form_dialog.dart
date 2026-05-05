@@ -147,57 +147,16 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                   ),
                 ),
                 SizedBox(height: 8 * widget.scale),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final itemWidth =
-                        (constraints.maxWidth - 16 * widget.scale) / 3;
-                    return Wrap(
-                      spacing: 8 * widget.scale,
-                      runSpacing: 8 * widget.scale,
-                      children: VehicleType.values.map((type) {
-                        final isSelected = _selectedType == type;
-                        return SizedBox(
-                          width: itemWidth,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => setState(() => _selectedType = type),
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 8 * widget.scale),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: isSelected
-                                      ? (isDark
-                                          ? const Color(0xFF8B4DDE)
-                                          : const Color(0xFFFF8A00))
-                                      : (isDark
-                                          ? const Color(0xFF1A1D24)
-                                          : const Color(0xFFF0F0F0)),
-                                ),
-                                child: Text(
-                                  type.display,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : (isDark
-                                            ? Colors.grey[300]
-                                            : Colors.grey[700]),
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 12 * widget.scale,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
+                Row(
+                  children: [
+                    for (final type in VehicleType.values) ...[
+                      Expanded(
+                        child: _vehicleTypeButton(type, isDark),
+                      ),
+                      if (type != VehicleType.values.last)
+                        SizedBox(width: 8 * widget.scale),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -369,6 +328,40 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _vehicleTypeButton(VehicleType type, bool isDark) {
+    final isSelected = _selectedType == type;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => _selectedType = type),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 8 * widget.scale),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: isSelected
+                ? (isDark ? const Color(0xFF8B4DDE) : const Color(0xFFFF8A00))
+                : (isDark ? const Color(0xFF1A1D24) : const Color(0xFFF0F0F0)),
+          ),
+          child: Text(
+            type.display,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? Colors.grey[300] : Colors.grey[700]),
+              fontWeight: FontWeight.w500,
+              fontSize: 12 * widget.scale,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
