@@ -61,7 +61,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final email = _emailController.text.trim();
 
     if (name.isEmpty || username.isEmpty || email.isEmpty) {
-      _showMessage('Preencha nome, usuario e e-mail.');
+      _showMessage('Preencha nome, usuário e e-mail.');
       return;
     }
 
@@ -110,7 +110,7 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (_) => AlertDialog(
         title: const Text('Apagar perfil'),
         content: const Text(
-            'Essa acao remove sua conta localmente neste dispositivo. Continuar?'),
+            'Essa ação remove sua conta localmente neste dispositivo. Continuar?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -185,7 +185,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   SizedBox(height: 8 * scale),
                   Text(
-                    'Configuracoes',
+                    'Configurações',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -231,8 +231,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                               SizedBox(height: 12 * scale),
                               AuthTextField(
-                                label: 'Usuario',
-                                hint: 'Seu usuario',
+                                label: 'Usuário',
+                                hint: 'Seu usuário',
                                 icon: Icons.alternate_email,
                                 controller: _usernameController,
                                 scale: scale,
@@ -240,7 +240,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               SizedBox(height: 12 * scale),
                               AuthTextField(
                                 label: 'E-mail',
-                                hint: 'voce@email.com',
+                                hint: 'seu@email.com',
                                 icon: Icons.mail_outline,
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
@@ -271,7 +271,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                             color: Colors.white,
                                           ),
                                         )
-                                      : const Text('Salvar alteracoes'),
+                                      : const Text('Salvar alterações'),
                                 ),
                               ),
                             ],
@@ -281,7 +281,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         _sectionCard(
                           context,
                           scale,
-                          title: 'Seguranca',
+                          title: 'Segurança',
                           child: Column(
                             children: [
                               AuthTextField(
@@ -295,7 +295,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               SizedBox(height: 12 * scale),
                               AuthTextField(
                                 label: 'Nova senha',
-                                hint: 'Minimo 6 caracteres',
+                                hint: 'Mínimo de 6 caracteres',
                                 icon: Icons.lock_reset,
                                 controller: _newPasswordController,
                                 obscureText: true,

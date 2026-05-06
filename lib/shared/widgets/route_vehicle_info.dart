@@ -100,7 +100,7 @@ class _RouteVehicleInfoState extends State<RouteVehicleInfo> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Veículo Selecionado',
+                'Veículo selecionado',
                 style: TextStyle(
                   fontSize: 12 * widget.scale,
                   fontWeight: FontWeight.w500,
@@ -126,7 +126,7 @@ class _RouteVehicleInfoState extends State<RouteVehicleInfo> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Distância da Rota',
+                      'Distância da rota',
                       style: TextStyle(
                         fontSize: 11 * widget.scale,
                         fontWeight: FontWeight.w400,
@@ -150,7 +150,7 @@ class _RouteVehicleInfoState extends State<RouteVehicleInfo> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tempo Estimado',
+                      'Tempo estimado',
                       style: TextStyle(
                         fontSize: 11 * widget.scale,
                         fontWeight: FontWeight.w400,

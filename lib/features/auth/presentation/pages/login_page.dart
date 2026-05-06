@@ -145,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 SizedBox(height: 10 * widthScale),
                                 Text(
-                                  'Faca seu login',
+                                  'Faça seu login',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 18 * widthScale,
@@ -157,8 +157,8 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 SizedBox(height: 16 * widthScale),
                                 AuthTextField(
-                                  label: 'E-mail ou usuario',
-                                  hint: '[Seu e-mail ou usuario]',
+                                  label: 'E-mail ou usuário',
+                                  hint: '[Seu e-mail ou usuário]',
                                   icon: Icons.mail_outline,
                                   controller: _emailController,
                                   keyboardType: TextInputType.emailAddress,
@@ -291,7 +291,7 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                       children: [
                                         const TextSpan(
-                                            text: 'Nao tem uma conta? '),
+                                            text: 'Não tem uma conta? '),
                                         WidgetSpan(
                                           child: GestureDetector(
                                             onTap: () {

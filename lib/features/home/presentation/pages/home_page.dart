@@ -114,11 +114,11 @@ class _HomePageState extends State<HomePage> {
                     builder: (context, snapshot) {
                       final name = snapshot.data?.name.trim();
                       final welcomeName = (name == null || name.isEmpty)
-                          ? 'USUARIO'
+                          ? 'USUÁRIO'
                           : name.toUpperCase();
 
                       return Text(
-                        'Bem vindo, $welcomeName',
+                        'Bem-vindo, $welcomeName',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -190,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                         SizedBox(width: 8 * scale),
                         Expanded(
                           child: SummaryCard(
-                            title: 'KMs PERCORRIDOS',
+                            title: 'KM PERCORRIDOS',
                             value: routeService.todayKm.toStringAsFixed(1),
                             subtitle: 'Hoje',
                             icon: Icons.speed,
@@ -268,7 +268,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   SizedBox(height: 20 * scale),
                   Text(
-                    'Acesso Rapido',
+                    'Acesso Rápido',
                     style: TextStyle(
                       color: isDark ? Colors.white : const Color(0xFF111111),
                       fontWeight: FontWeight.w700,
@@ -324,7 +324,7 @@ class _HomePageState extends State<HomePage> {
                           if (result != null && mounted) setState(() {});
                         },
                         child: QuickActionCard(
-                          title: 'Veiculo',
+                          title: 'Veículo',
                           icon: Icons.local_shipping_outlined,
                           scale: scale,
                         ),
@@ -339,7 +339,7 @@ class _HomePageState extends State<HomePage> {
                           if (result != null && mounted) setState(() {});
                         },
                         child: QuickActionCard(
-                          title: 'Relatorios',
+                          title: 'Relatórios',
                           icon: Icons.insert_chart_outlined,
                           scale: scale,
                         ),

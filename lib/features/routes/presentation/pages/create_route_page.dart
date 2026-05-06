@@ -198,7 +198,7 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                 ),
                 SizedBox(height: 20 * scale),
                 Text(
-                  'Pontos Atuais (${1 + _selectedPoints.length}/5)',
+                  'Pontos atuais (${1 + _selectedPoints.length}/5)',
                   style: TextStyle(
                     fontSize: 16 * scale,
                     fontWeight: FontWeight.w600,
@@ -437,7 +437,7 @@ class _SearchPointsDialogState extends State<_SearchPointsDialog> {
               children: [
                 Expanded(
                   child: Text(
-                    'Buscar Ponto',
+                    'Buscar ponto',
                     style: TextStyle(
                       fontSize: 18 * scale,
                       fontWeight: FontWeight.w700,
@@ -654,7 +654,7 @@ class _SearchVehiclesDialogState extends State<_SearchVehiclesDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Selecionar Veículo',
+              'Selecionar veículo',
               style: TextStyle(
                 fontSize: 18 * scale,
                 fontWeight: FontWeight.w700,

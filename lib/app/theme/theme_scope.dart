@@ -11,7 +11,7 @@ class ThemeScope extends InheritedNotifier<ThemeController> {
 
   static ThemeController of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<ThemeScope>();
-    assert(scope != null, 'ThemeScope nao encontrado na arvore.');
+    assert(scope != null, 'ThemeScope não encontrado na árvore.');
     return scope!.notifier!;
   }
 }

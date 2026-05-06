@@ -43,7 +43,7 @@ class AuthService {
     try {
       final activeUser = await getActiveUser();
       if (activeUser == null) {
-        return const AuthResult.failure('Nenhum usuario logado.');
+        return const AuthResult.failure('Nenhum usuário logado.');
       }
 
       final users = await _readUsers();
@@ -56,7 +56,7 @@ class AuthService {
             (u['email'] ?? '').toString().toLowerCase() == normalizedEmail;
       });
       if (emailTaken) {
-        return const AuthResult.failure('Esse e-mail ja esta cadastrado.');
+        return const AuthResult.failure('Esse e-mail já está cadastrado.');
       }
 
       final usernameTaken = users.any((u) {
@@ -66,7 +66,7 @@ class AuthService {
                 normalizedUsername;
       });
       if (usernameTaken) {
-        return const AuthResult.failure('Esse nome de usuario ja esta em uso.');
+        return const AuthResult.failure('Esse nome de usuário já está em uso.');
       }
 
       final updatedUser = activeUser.toMap()
@@ -93,7 +93,7 @@ class AuthService {
     try {
       final activeUser = await getActiveUser();
       if (activeUser == null) {
-        return const AuthResult.failure('Nenhum usuario logado.');
+        return const AuthResult.failure('Nenhum usuário logado.');
       }
 
       if (currentPassword != activeUser.password) {
@@ -160,7 +160,7 @@ class AuthService {
       }).firstOrNull;
 
       if (user == null) {
-        return const AuthResult.failure('Usuario ou senha invalidos.');
+        return const AuthResult.failure('Usuário ou senha inválidos.');
       }
 
       await _saveActiveUser(user);
@@ -197,7 +197,7 @@ class AuthService {
         (u) => (u['email'] ?? '').toString().toLowerCase() == normalizedEmail,
       );
       if (emailExists) {
-        return const AuthResult.failure('Esse e-mail ja esta cadastrado.');
+        return const AuthResult.failure('Esse e-mail já está cadastrado.');
       }
 
       final usernameExists = users.any(
@@ -206,7 +206,7 @@ class AuthService {
             normalizedUsername,
       );
       if (usernameExists) {
-        return const AuthResult.failure('Esse nome de usuario ja esta em uso.');
+        return const AuthResult.failure('Esse nome de usuário já está em uso.');
       }
 
       final user = <String, dynamic>{

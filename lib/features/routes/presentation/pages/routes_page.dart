@@ -175,7 +175,7 @@ class _RoutesPageState extends State<RoutesPage> {
                               onTap: () => setState(() => selectedTab = 1),
                             ),
                             _RouteTabChip(
-                              label: 'Historico',
+                              label: 'Histórico',
                               selected: selectedTab == 2,
                               scale: scale,
                               onTap: () => setState(() => selectedTab = 2),

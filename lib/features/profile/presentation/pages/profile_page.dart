@@ -70,7 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Nao foi possivel ler a imagem selecionada.')),
+            content: Text('Não foi possível ler a imagem selecionada.')),
       );
       return;
     }
@@ -165,13 +165,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 final user = snapshot.data;
                 final name = (user?.name.trim().isNotEmpty == true)
                     ? user!.name.trim()
-                    : 'USUARIO';
+                    : 'USUÁRIO';
                 final username = (user?.username.trim().isNotEmpty == true)
                     ? user!.username.trim()
-                    : 'nao definido';
+                    : 'não definido';
                 final email = (user?.email.trim().isNotEmpty == true)
                     ? user!.email.trim()
-                    : 'nao definido';
+                    : 'não definido';
                 final memberSince = DateFormat('dd/MM/yyyy')
                     .format(user?.createdAt ?? DateTime.now());
 
@@ -222,19 +222,20 @@ class _ProfilePageState extends State<ProfilePage> {
                                 'Nome Completo: $name', scale,
                                 isDark: isDark),
                             _infoRow(Icons.alternate_email,
-                                'Usuario: $username', scale,
+                                'Usuário: $username', scale,
                                 isDark: isDark),
-                            _infoRow(Icons.mail_outline, 'Email: $email', scale,
+                            _infoRow(
+                                Icons.mail_outline, 'E-mail: $email', scale,
                                 isDark: isDark),
                             _infoRow(
                               Icons.calendar_month_outlined,
-                              'Membro Desde: $memberSince',
+                              'Membro desde: $memberSince',
                               scale,
                               isDark: isDark,
                             ),
                             SizedBox(height: 8 * scale),
                             _actionButtonOrange(
-                              'Configuracoes',
+                              'Configurações',
                               scale,
                               isDark: isDark,
                               onPressed: () async {

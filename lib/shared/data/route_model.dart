@@ -41,7 +41,7 @@ class AppRoute {
 
   final String id;
   final String name;
-  final List<RoutePoint> points; // de 2 a 5 pontos (A=inicio + até 4 destinos)
+  final List<RoutePoint> points; // de 2 a 5 pontos (A=início + até 4 destinos)
   RouteStatus status;
   final String? vehicleId;
   DateTime? scheduledTime;

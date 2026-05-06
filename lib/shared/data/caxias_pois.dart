@@ -4,7 +4,7 @@ import 'route_model.dart';
 /// Pontos de interesse REAIS de Caxias-MA (coordenadas do OpenStreetMap)
 class CaxiasPOI {
   static const List<RoutePoint> allPoints = [
-    // UniFacema (ponto fixo do usuario - sempre A)
+    // UniFacema (ponto fixo do usuário - sempre A)
     RoutePoint(
         id: 'unifacema', name: 'UniFacema', latLng: LatLng(-4.8645, -43.3573)),
 

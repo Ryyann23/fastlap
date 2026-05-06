@@ -38,7 +38,7 @@ class FastlapBottomBar extends StatelessWidget {
             children: [
               _BottomItem(
                 icon: Icons.home_rounded,
-                label: 'Inicio',
+                label: 'Início',
                 isActive: currentTab == FastlapTab.inicio,
                 scale: scale,
                 onTap: () => onTabSelected(FastlapTab.inicio),
@@ -59,7 +59,7 @@ class FastlapBottomBar extends StatelessWidget {
               ),
               _BottomItem(
                 icon: Icons.history,
-                label: 'Historico',
+                label: 'Histórico',
                 isActive: currentTab == FastlapTab.historico,
                 scale: scale,
                 onTap: () => onTabSelected(FastlapTab.historico),

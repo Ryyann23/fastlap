@@ -173,7 +173,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                                 SizedBox(height: 14 * widthScale),
                                 AuthTextField(
-                                  label: 'Nome de usuario',
+                                  label: 'Nome de usuário',
                                   hint: 'ex: motoboy01',
                                   icon: Icons.alternate_email,
                                   controller: _usernameController,
@@ -182,7 +182,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 SizedBox(height: 14 * widthScale),
                                 AuthTextField(
                                   label: 'E-mail',
-                                  hint: 'voce@email.com',
+                                  hint: 'seu@email.com',
                                   icon: Icons.mail_outline,
                                   controller: _emailController,
                                   keyboardType: TextInputType.emailAddress,
@@ -191,7 +191,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 SizedBox(height: 14 * widthScale),
                                 AuthTextField(
                                   label: 'Senha',
-                                  hint: 'Minimo 6 caracteres',
+                                  hint: 'Mínimo de 6 caracteres',
                                   icon: Icons.lock_outline_rounded,
                                   controller: _passwordController,
                                   obscureText: true,

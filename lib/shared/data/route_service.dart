@@ -160,7 +160,7 @@ class RouteService extends ChangeNotifier {
     );
   }
 
-  /// Total de KMs de rotas concluídas hoje
+  /// Total de km de rotas concluídas hoje
   double get todayKm {
     final now = DateTime.now();
     return _routes
