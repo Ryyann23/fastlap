@@ -10,7 +10,6 @@ import '../../../routes/presentation/pages/routes_page.dart';
 import '../../../../shared/data/route_model.dart';
 import '../../../../shared/data/route_service.dart';
 import '../../../../shared/data/routing_service.dart';
-import '../../../../shared/data/vehicle_model.dart';
 import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
@@ -420,7 +419,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
     // Juntar todos os pontos de todas as rotas filtradas para exibir no mapa
     final allMarkers = <Marker>[];
-    final vehicleMarkers = <Marker>[];
+    final userMarkers = <Marker>[];
     final allPolylines = <Polyline>[];
 
     for (final route in routes) {
@@ -470,12 +469,12 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
         );
       }
 
-      vehicleMarkers.add(
+      userMarkers.add(
         Marker(
           width: 46 * scale,
           height: 46 * scale,
           point: pathSlice.position,
-          child: _vehicleMarker(route, scale),
+          child: _userRouteMarker(scale),
         ),
       );
     }
@@ -561,8 +560,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     ),
                     if (allPolylines.isNotEmpty)
                       PolylineLayer(polylines: allPolylines),
-                    if (allMarkers.isNotEmpty || vehicleMarkers.isNotEmpty)
-                      MarkerLayer(markers: [...allMarkers, ...vehicleMarkers]),
+                    if (allMarkers.isNotEmpty || userMarkers.isNotEmpty)
+                      MarkerLayer(markers: [...allMarkers, ...userMarkers]),
                   ],
                 ),
 
@@ -753,7 +752,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _vehicleMarker(AppRoute route, double scale) {
+  Widget _userRouteMarker(double scale) {
     return Container(
       alignment: Alignment.center,
       decoration: BoxDecoration(
@@ -771,24 +770,15 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
           width: 2 * scale,
         ),
       ),
-      child: Text(
-        _vehicleEmoji(route),
-        style: TextStyle(fontSize: 24 * scale, height: 1),
+      child: Padding(
+        padding: EdgeInsets.all(3 * scale),
+        child: UserHeaderAvatar(
+          radius: 18 * scale,
+          lightBackgroundColor: const Color(0xFFFFA95B),
+          darkBackgroundColor: const Color(0xFF8B4DDE),
+        ),
       ),
     );
-  }
-
-  String _vehicleEmoji(AppRoute route) {
-    switch (route.vehicle?.type) {
-      case VehicleType.moto:
-        return '🛵';
-      case VehicleType.carro:
-        return '🚗';
-      case VehicleType.caminhao:
-        return '🚚';
-      case null:
-        return '🚚';
-    }
   }
 
   Widget _bottomRouteCard(AppRoute route, double scale) {
