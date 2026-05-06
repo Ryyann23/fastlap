@@ -324,7 +324,7 @@ class _HomePageState extends State<HomePage> {
                           if (result != null && mounted) setState(() {});
                         },
                         child: QuickActionCard(
-                          title: 'Veículo',
+                          title: 'Veículos',
                           icon: Icons.local_shipping_outlined,
                           scale: scale,
                         ),
