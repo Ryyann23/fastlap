@@ -27,6 +27,7 @@ class _HistoryPageState extends State<HistoryPage> {
   void initState() {
     super.initState();
     RouteService.instance.addListener(_onRoutesChanged);
+    _loadRoutes();
   }
 
   @override
@@ -37,6 +38,14 @@ class _HistoryPageState extends State<HistoryPage> {
 
   void _onRoutesChanged() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _loadRoutes() async {
+    try {
+      await RouteService.instance.loadRoutes();
+    } catch (_) {
+      // A tela permanece vazia se o backend nao estiver disponivel.
+    }
   }
 
   String _formatBrasiliaDateHeader() {

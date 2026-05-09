@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 enum AuditActionType {
   login,
@@ -79,8 +76,6 @@ class AuditLogService extends ChangeNotifier {
 
   static final AuditLogService instance = AuditLogService._();
 
-  static const String _auditLogKey = 'fastlap_audit_logs';
-
   final List<AuditLogEntry> _entries = [];
   bool _loaded = false;
 
@@ -88,19 +83,6 @@ class AuditLogService extends ChangeNotifier {
 
   Future<void> ensureLoaded() async {
     if (_loaded) return;
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_auditLogKey);
-    if (raw != null && raw.isNotEmpty) {
-      final decoded = jsonDecode(raw) as List<dynamic>;
-      _entries
-        ..clear()
-        ..addAll(
-          decoded
-              .map((item) =>
-                  AuditLogEntry.fromMap(Map<String, dynamic>.from(item as Map)))
-              .toList(),
-        );
-    }
     _entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     _loaded = true;
     notifyListeners();
@@ -128,13 +110,6 @@ class AuditLogService extends ChangeNotifier {
     );
 
     _entries.insert(0, entry);
-    await _persist();
     notifyListeners();
-  }
-
-  Future<void> _persist() async {
-    final prefs = await SharedPreferences.getInstance();
-    final payload = _entries.map((e) => e.toMap()).toList();
-    await prefs.setString(_auditLogKey, jsonEncode(payload));
   }
 }

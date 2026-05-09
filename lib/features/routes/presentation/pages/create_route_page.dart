@@ -19,11 +19,32 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
   final _nameController = TextEditingController();
   String? _selectedVehicleId;
   final List<RoutePoint> _selectedPoints = [];
+  bool _isCreating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    VehicleService.instance.addListener(_onVehiclesChanged);
+    _loadVehicles();
+  }
 
   @override
   void dispose() {
+    VehicleService.instance.removeListener(_onVehiclesChanged);
     _nameController.dispose();
     super.dispose();
+  }
+
+  void _onVehiclesChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadVehicles() async {
+    try {
+      await VehicleService.instance.loadVehicles();
+    } catch (_) {
+      // A tela mostra a lista vazia se o backend nao estiver disponivel.
+    }
   }
 
   void _addPoint(RoutePoint point) {
@@ -61,7 +82,7 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
     }
   }
 
-  void _createRoute() {
+  Future<void> _createRoute() async {
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Digite um nome para a rota')),
@@ -82,13 +103,23 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
       return;
     }
 
-    final createdRoute = RouteService.instance.createRoute(
-      name: _nameController.text.trim(),
-      selectedPoints: _selectedPoints,
-      vehicleId: _selectedVehicleId!,
-    );
+    setState(() => _isCreating = true);
+    try {
+      final createdRoute = await RouteService.instance.createRoute(
+        name: _nameController.text.trim(),
+        selectedPoints: _selectedPoints,
+        vehicleId: _selectedVehicleId!,
+      );
 
-    Navigator.of(context).pop(createdRoute.status);
+      if (!mounted) return;
+      Navigator.of(context).pop(createdRoute.status);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isCreating = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
+    }
   }
 
   @override
@@ -352,7 +383,7 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                 ),
                 SizedBox(height: 24 * scale),
                 GestureDetector(
-                  onTap: _createRoute,
+                  onTap: _isCreating ? null : _createRoute,
                   child: Container(
                     width: double.infinity,
                     height: 56 * scale,
@@ -367,14 +398,23 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      'CRIAR ROTA',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 17 * scale,
-                      ),
-                    ),
+                    child: _isCreating
+                        ? SizedBox(
+                            width: 22 * scale,
+                            height: 22 * scale,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'CRIAR ROTA',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 17 * scale,
+                            ),
+                          ),
                   ),
                 ),
                 SizedBox(height: 16 * scale),

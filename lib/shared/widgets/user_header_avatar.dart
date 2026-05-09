@@ -25,14 +25,22 @@ class UserHeaderAvatar extends StatelessWidget {
       future: AuthService().getActiveUser(),
       builder: (context, snapshot) {
         final avatarBase64 = snapshot.data?.avatarBase64;
+        final avatarUrl = snapshot.data?.avatarUrl;
         final avatarBytes = _avatarBytes(avatarBase64);
+        final ImageProvider? avatarImage;
+        if (avatarBytes != null) {
+          avatarImage = MemoryImage(avatarBytes);
+        } else if (avatarUrl != null && avatarUrl.isNotEmpty) {
+          avatarImage = NetworkImage(avatarUrl);
+        } else {
+          avatarImage = null;
+        }
 
         return CircleAvatar(
           radius: radius,
           backgroundColor: isDark ? darkBackgroundColor : lightBackgroundColor,
-          backgroundImage:
-              avatarBytes == null ? null : MemoryImage(avatarBytes),
-          child: avatarBytes == null
+          backgroundImage: avatarImage,
+          child: avatarImage == null
               ? Icon(
                   Icons.person,
                   color: Colors.white,

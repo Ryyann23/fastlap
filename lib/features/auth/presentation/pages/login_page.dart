@@ -157,8 +157,8 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 SizedBox(height: 16 * widthScale),
                                 AuthTextField(
-                                  label: 'E-mail ou usuário',
-                                  hint: '[Seu e-mail ou usuário]',
+                                  label: 'E-mail',
+                                  hint: '[Seu e-mail]',
                                   icon: Icons.mail_outline,
                                   controller: _emailController,
                                   keyboardType: TextInputType.emailAddress,

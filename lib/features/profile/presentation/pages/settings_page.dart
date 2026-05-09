@@ -109,8 +109,8 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Apagar perfil'),
-        content: const Text(
-            'Essa ação remove sua conta localmente neste dispositivo. Continuar?'),
+        content:
+            const Text('Essa acao remove sua conta do backend. Continuar?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -194,7 +194,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   SizedBox(height: 3 * scale),
                   Text(
-                    'Gerencie seu perfil local',
+                    'Gerencie seu perfil',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.92),
                       fontSize: 16 * scale,
@@ -244,6 +244,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 icon: Icons.mail_outline,
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
+                                readOnly: true,
                                 scale: scale,
                               ),
                               SizedBox(height: 16 * scale),

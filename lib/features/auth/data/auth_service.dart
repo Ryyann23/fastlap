@@ -1,21 +1,23 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../../../shared/data/api_client.dart';
 import '../../../shared/data/audit_log_service.dart';
+import '../../../shared/data/route_service.dart';
+import '../../../shared/data/vehicle_service.dart';
 
 class AuthService {
-  static const String _usersKey = 'fastlap_users';
-  static const String _activeUserKey = 'fastlap_active_user';
+  static LocalAuthUser? _activeUser;
+
+  final ApiClient _api = ApiClient.instance;
 
   Future<LocalAuthUser?> getActiveUser() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_activeUserKey);
-      if (raw == null || raw.isEmpty) return null;
+    if (_activeUser != null) return _activeUser;
+    if (!_api.hasSession) return null;
 
-      final map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
-      return LocalAuthUser.fromMap(map);
+    try {
+      final data = await _api.get('/api/auth/me');
+      if (data is! Map<String, dynamic>) return null;
+
+      _activeUser = LocalAuthUser.fromApi(data);
+      return _activeUser;
     } catch (_) {
       return null;
     }
@@ -23,8 +25,17 @@ class AuthService {
 
   Future<void> logout() async {
     final activeUser = await getActiveUser();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_activeUserKey);
+
+    try {
+      await _api.post('/api/auth/logout', auth: false);
+    } catch (_) {
+      // Logout local da sessao do app mesmo se o backend nao responder.
+    }
+
+    _activeUser = null;
+    _api.clearTokens();
+    RouteService.instance.clear();
+    VehicleService.instance.clear();
 
     await AuditLogService.instance.addEntry(
       action: AuditActionType.logout,
@@ -43,46 +54,39 @@ class AuthService {
     try {
       final activeUser = await getActiveUser();
       if (activeUser == null) {
-        return const AuthResult.failure('Nenhum usuário logado.');
+        return const AuthResult.failure('Nenhum usuario logado.');
       }
 
-      final users = await _readUsers();
       final normalizedEmail = email.trim().toLowerCase();
-      final normalizedUsername = username.trim().toLowerCase();
-
-      final emailTaken = users.any((u) {
-        final sameUser = _isSameUser(u, activeUser);
-        return !sameUser &&
-            (u['email'] ?? '').toString().toLowerCase() == normalizedEmail;
-      });
-      if (emailTaken) {
-        return const AuthResult.failure('Esse e-mail já está cadastrado.');
+      if (normalizedEmail != activeUser.email.toLowerCase()) {
+        return const AuthResult.failure(
+          'O backend atual nao permite alterar o e-mail.',
+        );
       }
 
-      final usernameTaken = users.any((u) {
-        final sameUser = _isSameUser(u, activeUser);
-        return !sameUser &&
-            (u['username'] ?? '').toString().toLowerCase() ==
-                normalizedUsername;
-      });
-      if (usernameTaken) {
-        return const AuthResult.failure('Esse nome de usuário já está em uso.');
-      }
-
-      final updatedUser = activeUser.toMap()
-        ..['name'] = name.trim()
-        ..['username'] = username.trim()
-        ..['email'] = normalizedEmail;
-
-      await _replaceAndPersistUser(
-        activeUser: activeUser,
-        users: users,
-        updatedUser: updatedUser,
+      final data = await _api.put(
+        '/api/users/${activeUser.id}',
+        body: {
+          'name': name.trim(),
+          'username': username.trim(),
+        },
       );
 
-      return AuthResult.success(token: 'local-session', userName: name.trim());
-    } catch (_) {
-      return const AuthResult.failure('Erro ao atualizar perfil local.');
+      final userData = data is Map<String, dynamic> ? data['user'] : null;
+      if (userData is Map<String, dynamic>) {
+        _activeUser = activeUser.mergeApi(userData);
+      } else {
+        _activeUser = activeUser.copyWith(
+          name: name.trim(),
+          username: username.trim(),
+        );
+      }
+
+      return AuthResult.success(token: 'session', userName: name.trim());
+    } catch (error) {
+      return AuthResult.failure(
+        _messageFor(error, 'Erro ao atualizar perfil no backend.'),
+      );
     }
   }
 
@@ -93,30 +97,28 @@ class AuthService {
     try {
       final activeUser = await getActiveUser();
       if (activeUser == null) {
-        return const AuthResult.failure('Nenhum usuário logado.');
-      }
-
-      if (currentPassword != activeUser.password) {
-        return const AuthResult.failure('Senha atual incorreta.');
+        return const AuthResult.failure('Nenhum usuario logado.');
       }
 
       if (newPassword.length < 6) {
         return const AuthResult.failure(
-            'A nova senha precisa ter pelo menos 6 caracteres.');
+          'A nova senha precisa ter pelo menos 6 caracteres.',
+        );
       }
 
-      final users = await _readUsers();
-      final updatedUser = activeUser.toMap()..['password'] = newPassword;
-
-      await _replaceAndPersistUser(
-        activeUser: activeUser,
-        users: users,
-        updatedUser: updatedUser,
+      await _api.put(
+        '/api/users/${activeUser.id}/password',
+        body: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
       );
 
-      return const AuthResult.success(token: 'local-session', userName: '');
-    } catch (_) {
-      return const AuthResult.failure('Erro ao atualizar senha local.');
+      return const AuthResult.success(token: 'session', userName: '');
+    } catch (error) {
+      return AuthResult.failure(
+        _messageFor(error, 'Erro ao atualizar senha no backend.'),
+      );
     }
   }
 
@@ -124,61 +126,80 @@ class AuthService {
     final activeUser = await getActiveUser();
     if (activeUser == null) return;
 
-    final users = await _readUsers();
-    final updatedUser = activeUser.toMap()..['avatarBase64'] = avatarBase64;
-
-    await _replaceAndPersistUser(
-      activeUser: activeUser,
-      users: users,
-      updatedUser: updatedUser,
-    );
+    // O backend atual possui apenas avatar_url. A imagem escolhida fica na
+    // sessao do app ate existir upload/URL no servidor.
+    _activeUser = activeUser.copyWith(avatarBase64: avatarBase64);
   }
 
   Future<void> deleteProfile() async {
     final activeUser = await getActiveUser();
     if (activeUser == null) return;
 
-    final users = await _readUsers();
-    users.removeWhere((u) => _isSameUser(u, activeUser));
-    await _writeUsers(users);
-    await logout();
+    await _api.delete('/api/users/${activeUser.id}');
+    _activeUser = null;
+    _api.clearTokens();
+    RouteService.instance.clear();
+    VehicleService.instance.clear();
   }
 
-  Future<AuthResult> login(
-      {required String email, required String password}) async {
+  Future<AuthResult> login({
+    required String email,
+    required String password,
+  }) async {
     try {
-      final users = await _readUsers();
-      final identifier = email.trim().toLowerCase();
+      final data = await _api.post(
+        '/api/auth/login',
+        auth: false,
+        body: {
+          'email': email.trim().toLowerCase(),
+          'password': password,
+        },
+      );
 
-      final user = users.where((u) {
-        final savedEmail = (u['email'] ?? '').toString().toLowerCase();
-        final savedUsername = (u['username'] ?? '').toString().toLowerCase();
-        final savedPassword = (u['password'] ?? '').toString();
-
-        return (savedEmail == identifier || savedUsername == identifier) &&
-            savedPassword == password;
-      }).firstOrNull;
-
-      if (user == null) {
-        return const AuthResult.failure('Usuário ou senha inválidos.');
+      if (data is! Map<String, dynamic>) {
+        return const AuthResult.failure('Resposta invalida do backend.');
       }
 
-      await _saveActiveUser(user);
+      final accessToken = data['accessToken']?.toString();
+      final refreshToken = data['refreshToken']?.toString();
+      final userData = data['user'];
+
+      if (accessToken == null ||
+          accessToken.isEmpty ||
+          refreshToken == null ||
+          refreshToken.isEmpty ||
+          userData is! Map<String, dynamic>) {
+        return const AuthResult.failure('Resposta invalida do backend.');
+      }
+
+      _api.setTokens(accessToken: accessToken, refreshToken: refreshToken);
+      _activeUser = LocalAuthUser.fromApi(userData);
+
+      try {
+        final me = await _api.get('/api/auth/me');
+        if (me is Map<String, dynamic>) {
+          _activeUser = LocalAuthUser.fromApi(me);
+        }
+      } catch (_) {
+        // O login ja retornou usuario suficiente para seguir.
+      }
 
       await AuditLogService.instance.addEntry(
         action: AuditActionType.login,
         description: 'Login realizado',
         entityType: 'auth',
-        entityId: (user['id'] ?? '').toString(),
-        userName: user['name']?.toString(),
+        entityId: _activeUser?.id ?? 'unknown',
+        userName: _activeUser?.name,
       );
 
       return AuthResult.success(
-        token: 'local-session',
-        userName: user['name']?.toString() ?? '',
+        token: accessToken,
+        userName: _activeUser?.name ?? '',
       );
-    } catch (_) {
-      return const AuthResult.failure('Erro ao ler os dados locais de login.');
+    } catch (error) {
+      return AuthResult.failure(
+        _messageFor(error, 'Erro ao fazer login no backend.'),
+      );
     }
   }
 
@@ -189,97 +210,35 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final users = await _readUsers();
-      final normalizedEmail = email.trim().toLowerCase();
-      final normalizedUsername = username.trim().toLowerCase();
-
-      final emailExists = users.any(
-        (u) => (u['email'] ?? '').toString().toLowerCase() == normalizedEmail,
+      final data = await _api.post(
+        '/api/auth/register',
+        auth: false,
+        body: {
+          'name': name.trim(),
+          'username': username.trim(),
+          'email': email.trim().toLowerCase(),
+          'password': password,
+        },
       );
-      if (emailExists) {
-        return const AuthResult.failure('Esse e-mail já está cadastrado.');
+
+      if (data is! Map<String, dynamic>) {
+        return const AuthResult.failure('Resposta invalida do backend.');
       }
-
-      final usernameExists = users.any(
-        (u) =>
-            (u['username'] ?? '').toString().toLowerCase() ==
-            normalizedUsername,
-      );
-      if (usernameExists) {
-        return const AuthResult.failure('Esse nome de usuário já está em uso.');
-      }
-
-      final user = <String, dynamic>{
-        'id': DateTime.now().microsecondsSinceEpoch.toString(),
-        'name': name.trim(),
-        'username': username.trim(),
-        'email': normalizedEmail,
-        'password': password,
-        'createdAt': DateTime.now().toIso8601String(),
-        'avatarBase64': null,
-      };
-
-      users.add(user);
-      await _writeUsers(users);
-      await _saveActiveUser(user);
 
       return AuthResult.success(
-        token: 'local-session',
-        userName: user['name']?.toString() ?? '',
+        token: data['accessToken']?.toString() ?? 'session',
+        userName: name.trim(),
       );
-    } catch (_) {
-      return const AuthResult.failure(
-          'Erro ao salvar os dados locais de cadastro.');
+    } catch (error) {
+      return AuthResult.failure(
+        _messageFor(error, 'Erro ao criar cadastro no backend.'),
+      );
     }
   }
 
-  Future<List<Map<String, dynamic>>> _readUsers() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_usersKey);
-    if (raw == null || raw.isEmpty) return <Map<String, dynamic>>[];
-
-    final decoded = jsonDecode(raw) as List<dynamic>;
-    return decoded
-        .map((item) => Map<String, dynamic>.from(item as Map))
-        .toList();
-  }
-
-  Future<void> _writeUsers(List<Map<String, dynamic>> users) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_usersKey, jsonEncode(users));
-  }
-
-  Future<void> _saveActiveUser(Map<String, dynamic> user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_activeUserKey, jsonEncode(user));
-  }
-
-  Future<void> _replaceAndPersistUser({
-    required LocalAuthUser activeUser,
-    required List<Map<String, dynamic>> users,
-    required Map<String, dynamic> updatedUser,
-  }) async {
-    final index = users.indexWhere((u) => _isSameUser(u, activeUser));
-    if (index >= 0) {
-      users[index] = updatedUser;
-    } else {
-      users.add(updatedUser);
-    }
-
-    await _writeUsers(users);
-    await _saveActiveUser(updatedUser);
-  }
-
-  bool _isSameUser(Map<String, dynamic> map, LocalAuthUser user) {
-    final mapId = (map['id'] ?? '').toString();
-    if (user.id.isNotEmpty && mapId.isNotEmpty) {
-      return mapId == user.id;
-    }
-
-    final mapEmail = (map['email'] ?? '').toString().toLowerCase();
-    final mapCreatedAt = (map['createdAt'] ?? '').toString();
-    return mapEmail == user.email.toLowerCase() &&
-        mapCreatedAt == user.createdAt.toIso8601String();
+  String _messageFor(Object error, String fallback) {
+    if (error is ApiException) return error.message;
+    return fallback;
   }
 }
 
@@ -309,41 +268,65 @@ class LocalAuthUser {
     required this.name,
     required this.username,
     required this.email,
-    required this.password,
     required this.createdAt,
-    required this.avatarBase64,
+    this.avatarBase64,
+    this.avatarUrl,
   });
 
   final String id;
   final String name;
   final String username;
   final String email;
-  final String password;
   final DateTime createdAt;
   final String? avatarBase64;
+  final String? avatarUrl;
 
-  factory LocalAuthUser.fromMap(Map<String, dynamic> map) {
+  factory LocalAuthUser.fromApi(Map<String, dynamic> map) {
     return LocalAuthUser(
       id: (map['id'] ?? '').toString(),
       name: (map['name'] ?? '').toString(),
       username: (map['username'] ?? '').toString(),
       email: (map['email'] ?? '').toString(),
-      password: (map['password'] ?? '').toString(),
-      createdAt: DateTime.tryParse((map['createdAt'] ?? '').toString()) ??
+      createdAt: DateTime.tryParse(
+            (map['createdAt'] ?? map['created_at'] ?? '').toString(),
+          ) ??
           DateTime.now(),
-      avatarBase64: map['avatarBase64']?.toString(),
+      avatarUrl: (map['avatarUrl'] ?? map['avatar_url'])?.toString(),
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'username': username,
-      'email': email,
-      'password': password,
-      'createdAt': createdAt.toIso8601String(),
-      'avatarBase64': avatarBase64,
-    };
+  LocalAuthUser copyWith({
+    String? id,
+    String? name,
+    String? username,
+    String? email,
+    DateTime? createdAt,
+    String? avatarBase64,
+    String? avatarUrl,
+  }) {
+    return LocalAuthUser(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      createdAt: createdAt ?? this.createdAt,
+      avatarBase64: avatarBase64 ?? this.avatarBase64,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+    );
+  }
+
+  LocalAuthUser mergeApi(Map<String, dynamic> map) {
+    return copyWith(
+      id: (map['id'] ?? id).toString(),
+      name: (map['name'] ?? name).toString(),
+      username: (map['username'] ?? username).toString(),
+      email: (map['email'] ?? email).toString(),
+      avatarUrl:
+          (map['avatarUrl'] ?? map['avatar_url'] ?? avatarUrl)?.toString(),
+      createdAt: DateTime.tryParse(
+            (map['createdAt'] ?? map['created_at'] ?? '').toString(),
+          ) ??
+          createdAt,
+    );
   }
 }

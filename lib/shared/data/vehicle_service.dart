@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
+
+import 'api_client.dart';
 import 'audit_log_service.dart';
 import 'vehicle_model.dart';
 
@@ -14,81 +15,114 @@ class VehicleService extends ChangeNotifier {
 
   VehicleService._internal();
 
-  final List<Vehicle> _vehicles = [
-    Vehicle(
-      id: const Uuid().v4(),
-      name: 'Moto Padrão',
-      type: VehicleType.moto,
-      speedPerKm: 80.0,
-      carryCapacity: 50.0,
-      weight: 150.0,
-      isAvailable: true,
-    ),
-    Vehicle(
-      id: const Uuid().v4(),
-      name: 'Carro Padrão',
-      type: VehicleType.carro,
-      speedPerKm: 100.0,
-      carryCapacity: 500.0,
-      weight: 1500.0,
-      isAvailable: true,
-    ),
-  ];
+  final ApiClient _api = ApiClient.instance;
+  final List<Vehicle> _vehicles = [];
 
   Vehicle? _selectedVehicle;
+  bool _loaded = false;
+  bool _loading = false;
 
   List<Vehicle> get vehicles => List.unmodifiable(_vehicles);
   List<Vehicle> get availableVehicles =>
       _vehicles.where((v) => v.isAvailable).toList();
   Vehicle? get selectedVehicle => _selectedVehicle;
+  bool get isLoading => _loading;
 
-  void addVehicle(Vehicle vehicle) {
-    _vehicles.add(vehicle);
+  Future<void> loadVehicles({bool force = false}) async {
+    if (_loading || (_loaded && !force)) return;
+
+    _loading = true;
+    notifyListeners();
+
+    try {
+      final data = await _api.get('/api/vehicles');
+      if (data is! List) {
+        throw const ApiException('Resposta invalida ao listar veiculos.');
+      }
+
+      final loadedVehicles =
+          data.whereType<Map<String, dynamic>>().map(Vehicle.fromApi).toList();
+
+      _vehicles
+        ..clear()
+        ..addAll(loadedVehicles);
+      _selectedVehicle = _vehicles.where((v) => v.isSelected).firstOrNull;
+      _loaded = true;
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Vehicle> addVehicle(Vehicle vehicle) async {
+    final data = await _api.post('/api/vehicles', body: vehicle.toApi());
+    final vehicleData = data is Map<String, dynamic> ? data['vehicle'] : null;
+    if (vehicleData is! Map<String, dynamic>) {
+      throw const ApiException('Resposta invalida ao criar veiculo.');
+    }
+
+    final savedVehicle = Vehicle.fromApi(vehicleData);
+    _vehicles.insert(0, savedVehicle);
     notifyListeners();
 
     AuditLogService.instance.addEntry(
       action: AuditActionType.createVehicle,
-      description: 'Veículo criado: ${vehicle.name}',
+      description: 'Veiculo criado: ${savedVehicle.name}',
       entityType: 'vehicle',
-      entityId: vehicle.id,
+      entityId: savedVehicle.id,
       metadata: {
-        'type': vehicle.type.name,
-        'speedPerKm': vehicle.speedPerKm,
-        'carryCapacity': vehicle.carryCapacity,
+        'type': savedVehicle.type.name,
+        'speedPerKm': savedVehicle.speedPerKm,
+        'carryCapacity': savedVehicle.carryCapacity,
+      },
+    );
+
+    return savedVehicle;
+  }
+
+  Future<void> updateVehicle(Vehicle vehicle) async {
+    final data = await _api.put(
+      '/api/vehicles/${vehicle.id}',
+      body: vehicle.toApi(),
+    );
+    final vehicleData = data is Map<String, dynamic> ? data['vehicle'] : null;
+    if (vehicleData is! Map<String, dynamic>) {
+      throw const ApiException('Resposta invalida ao atualizar veiculo.');
+    }
+
+    final savedVehicle =
+        Vehicle.fromApi(vehicleData).copyWith(isAvailable: vehicle.isAvailable);
+    final index = _vehicles.indexWhere((v) => v.id == savedVehicle.id);
+    if (index == -1) return;
+
+    final oldVehicle = _vehicles[index];
+    _vehicles[index] = savedVehicle;
+    if (_selectedVehicle?.id == savedVehicle.id) {
+      _selectedVehicle = savedVehicle;
+    }
+    notifyListeners();
+
+    AuditLogService.instance.addEntry(
+      action: AuditActionType.updateVehicle,
+      description: 'Veiculo atualizado: ${savedVehicle.name}',
+      entityType: 'vehicle',
+      entityId: savedVehicle.id,
+      metadata: {
+        'oldName': oldVehicle.name,
+        'newName': savedVehicle.name,
+        'type': savedVehicle.type.name,
+        'speedPerKm': savedVehicle.speedPerKm,
+        'carryCapacity': savedVehicle.carryCapacity,
+        'isAvailable': savedVehicle.isAvailable,
       },
     );
   }
 
-  void updateVehicle(Vehicle vehicle) {
-    final index = _vehicles.indexWhere((v) => v.id == vehicle.id);
-    if (index != -1) {
-      final oldVehicle = _vehicles[index];
-      _vehicles[index] = vehicle;
-      if (_selectedVehicle?.id == vehicle.id) {
-        _selectedVehicle = vehicle;
-      }
-      notifyListeners();
-
-      AuditLogService.instance.addEntry(
-        action: AuditActionType.updateVehicle,
-        description: 'Veículo atualizado: ${vehicle.name}',
-        entityType: 'vehicle',
-        entityId: vehicle.id,
-        metadata: {
-          'oldName': oldVehicle.name,
-          'newName': vehicle.name,
-          'type': vehicle.type.name,
-          'speedPerKm': vehicle.speedPerKm,
-          'carryCapacity': vehicle.carryCapacity,
-          'isAvailable': vehicle.isAvailable,
-        },
-      );
-    }
-  }
-
-  void removeVehicle(String vehicleId) {
+  Future<void> removeVehicle(String vehicleId) async {
     final index = _vehicles.indexWhere((v) => v.id == vehicleId);
     if (index == -1) return;
+
+    await _api.delete('/api/vehicles/$vehicleId');
 
     final vehicle = _vehicles[index];
     _vehicles.removeAt(index);
@@ -99,7 +133,7 @@ class VehicleService extends ChangeNotifier {
 
     AuditLogService.instance.addEntry(
       action: AuditActionType.deleteVehicle,
-      description: 'Veículo removido: ${vehicle.name}',
+      description: 'Veiculo removido: ${vehicle.name}',
       entityType: 'vehicle',
       entityId: vehicle.id,
       metadata: {
@@ -108,19 +142,33 @@ class VehicleService extends ChangeNotifier {
     );
   }
 
-  void selectVehicle(Vehicle vehicle) {
-    _selectedVehicle = vehicle;
-    for (var v in _vehicles) {
-      v.isSelected = v.id == vehicle.id;
+  Future<void> selectVehicle(Vehicle vehicle) async {
+    final data = await _api.put('/api/vehicles/${vehicle.id}/select');
+    final vehicleData = data is Map<String, dynamic> ? data['vehicle'] : null;
+    final selected = vehicleData is Map<String, dynamic>
+        ? Vehicle.fromApi(vehicleData)
+        : vehicle.copyWith(isSelected: true);
+
+    _selectedVehicle = selected;
+    for (var i = 0; i < _vehicles.length; i++) {
+      final current = _vehicles[i];
+      _vehicles[i] = current.copyWith(isSelected: current.id == selected.id);
     }
     notifyListeners();
   }
 
   void deselectVehicle() {
     _selectedVehicle = null;
-    for (var v in _vehicles) {
-      v.isSelected = false;
+    for (var i = 0; i < _vehicles.length; i++) {
+      _vehicles[i] = _vehicles[i].copyWith(isSelected: false);
     }
+    notifyListeners();
+  }
+
+  void clear() {
+    _vehicles.clear();
+    _selectedVehicle = null;
+    _loaded = false;
     notifyListeners();
   }
 

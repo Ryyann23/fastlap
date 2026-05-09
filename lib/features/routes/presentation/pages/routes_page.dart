@@ -37,6 +37,7 @@ class _RoutesPageState extends State<RoutesPage> {
   void initState() {
     super.initState();
     RouteService.instance.addListener(_onRoutesChanged);
+    _loadRoutes();
   }
 
   @override
@@ -47,6 +48,32 @@ class _RoutesPageState extends State<RoutesPage> {
 
   void _onRoutesChanged() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _loadRoutes() async {
+    try {
+      await RouteService.instance.loadRoutes();
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage(error.toString());
+    }
+  }
+
+  Future<void> _updateRouteStatus(
+    AppRoute route,
+    RouteStatus status,
+  ) async {
+    try {
+      await RouteService.instance.updateStatus(route.id, status);
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage(error.toString());
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   List<AppRoute> _filteredRoutes() {
@@ -188,57 +215,59 @@ class _RoutesPageState extends State<RoutesPage> {
                   ),
                 ),
                 Expanded(
-                  child: routes.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.alt_route_rounded,
-                                size: 64 * scale,
-                                color: isDark
-                                    ? Colors.white24
-                                    : const Color(0xFFCCCCCC),
+                  child: RouteService.instance.isLoading && routes.isEmpty
+                      ? const Center(child: CircularProgressIndicator())
+                      : routes.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.alt_route_rounded,
+                                    size: 64 * scale,
+                                    color: isDark
+                                        ? Colors.white24
+                                        : const Color(0xFFCCCCCC),
+                                  ),
+                                  SizedBox(height: 12 * scale),
+                                  Text(
+                                    selectedTab == 0
+                                        ? 'Nenhuma rota ativa'
+                                        : selectedTab == 1
+                                            ? 'Nenhuma rota agendada'
+                                            : 'Nenhuma rota no histórico',
+                                    style: TextStyle(
+                                      fontSize: 17 * scale,
+                                      color: isDark
+                                          ? Colors.white38
+                                          : const Color(0xFF999999),
+                                    ),
+                                  ),
+                                  SizedBox(height: 6 * scale),
+                                  Text(
+                                    'Crie uma nova rota para começar',
+                                    style: TextStyle(
+                                      fontSize: 14 * scale,
+                                      color: isDark
+                                          ? Colors.white24
+                                          : const Color(0xFFBBBBBB),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 12 * scale),
-                              Text(
-                                selectedTab == 0
-                                    ? 'Nenhuma rota ativa'
-                                    : selectedTab == 1
-                                        ? 'Nenhuma rota agendada'
-                                        : 'Nenhuma rota no histórico',
-                                style: TextStyle(
-                                  fontSize: 17 * scale,
-                                  color: isDark
-                                      ? Colors.white38
-                                      : const Color(0xFF999999),
-                                ),
-                              ),
-                              SizedBox(height: 6 * scale),
-                              Text(
-                                'Crie uma nova rota para começar',
-                                style: TextStyle(
-                                  fontSize: 14 * scale,
-                                  color: isDark
-                                      ? Colors.white24
-                                      : const Color(0xFFBBBBBB),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: EdgeInsets.fromLTRB(horizontalPadding, 0,
-                              horizontalPadding, 16 * scale),
-                          itemCount: routes.length,
-                          itemBuilder: (context, index) {
-                            final route = routes[index];
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: 12 * scale),
-                              child: _routeCard(route, scale),
-                            );
-                          },
-                        ),
+                            )
+                          : ListView.builder(
+                              padding: EdgeInsets.fromLTRB(horizontalPadding, 0,
+                                  horizontalPadding, 16 * scale),
+                              itemCount: routes.length,
+                              itemBuilder: (context, index) {
+                                final route = routes[index];
+                                return Padding(
+                                  padding: EdgeInsets.only(bottom: 12 * scale),
+                                  child: _routeCard(route, scale),
+                                );
+                              },
+                            ),
                 ),
                 // Botão criar nova rota
                 Padding(
@@ -491,7 +520,7 @@ class _RoutesPageState extends State<RoutesPage> {
             Expanded(
                 child: _actionRow(Icons.pause_circle_outline, 'Pausar', scale,
                     onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.pausada);
+              _updateRouteStatus(route, RouteStatus.pausada);
             })),
             Container(
                 width: 1,
@@ -501,8 +530,7 @@ class _RoutesPageState extends State<RoutesPage> {
             Expanded(
                 child: _actionRow(Icons.check_circle_outline, 'Concluir', scale,
                     onTap: () {
-              RouteService.instance
-                  .updateStatus(route.id, RouteStatus.concluida);
+              _updateRouteStatus(route, RouteStatus.concluida);
             })),
             Container(
                 width: 1,
@@ -512,8 +540,7 @@ class _RoutesPageState extends State<RoutesPage> {
             Expanded(
                 child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale,
                     onTap: () {
-              RouteService.instance
-                  .updateStatus(route.id, RouteStatus.cancelada);
+              _updateRouteStatus(route, RouteStatus.cancelada);
             })),
           ],
         );
@@ -523,7 +550,7 @@ class _RoutesPageState extends State<RoutesPage> {
             Expanded(
                 child: _actionRow(Icons.play_circle_outline, 'Retomar', scale,
                     onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.ativa);
+              _updateRouteStatus(route, RouteStatus.ativa);
             })),
             Container(
                 width: 1,
@@ -533,8 +560,7 @@ class _RoutesPageState extends State<RoutesPage> {
             Expanded(
                 child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale,
                     onTap: () {
-              RouteService.instance
-                  .updateStatus(route.id, RouteStatus.cancelada);
+              _updateRouteStatus(route, RouteStatus.cancelada);
             })),
           ],
         );
@@ -544,7 +570,7 @@ class _RoutesPageState extends State<RoutesPage> {
             Expanded(
                 child: _actionRow(Icons.play_circle_outline, 'Iniciar', scale,
                     onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.ativa);
+              _updateRouteStatus(route, RouteStatus.ativa);
             })),
             Container(
                 width: 1,
@@ -554,8 +580,7 @@ class _RoutesPageState extends State<RoutesPage> {
             Expanded(
                 child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale,
                     onTap: () {
-              RouteService.instance
-                  .updateStatus(route.id, RouteStatus.cancelada);
+              _updateRouteStatus(route, RouteStatus.cancelada);
             })),
           ],
         );

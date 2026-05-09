@@ -52,7 +52,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       ..addListener(_onSimulationTick)
       ..addStatusListener(_onSimulationStatusChanged);
     RouteService.instance.addListener(_onRoutesChanged);
-    _fetchAllRouteGeometries();
+    _loadRoutesAndGeometries();
   }
 
   @override
@@ -78,6 +78,34 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       _fetchAllRouteGeometries();
       setState(() {});
     }
+  }
+
+  Future<void> _loadRoutesAndGeometries() async {
+    try {
+      await RouteService.instance.loadRoutes();
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage(error.toString());
+    }
+
+    await _fetchAllRouteGeometries();
+  }
+
+  Future<void> _updateRouteStatus(
+    AppRoute route,
+    RouteStatus status,
+  ) async {
+    try {
+      await RouteService.instance.updateStatus(route.id, status);
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage(error.toString());
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _fetchAllRouteGeometries() async {
@@ -191,12 +219,12 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     });
   }
 
-  void _completeRouteSimulation(AppRoute route) {
+  Future<void> _completeRouteSimulation(AppRoute route) async {
     if (_simulatedRouteId == route.id) {
       _routeAnimationController.stop();
       _routeAnimationController.value = 1;
     }
-    RouteService.instance.updateStatus(route.id, RouteStatus.concluida);
+    await _updateRouteStatus(route, RouteStatus.concluida);
   }
 
   Duration _simulationDurationFor(AppRoute route) {
@@ -967,7 +995,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             Expanded(
                 child: _actionRow(Icons.play_circle_outline, 'Retomar', scale,
                     onTap: () {
-              RouteService.instance.updateStatus(route.id, RouteStatus.ativa);
+              _updateRouteStatus(route, RouteStatus.ativa);
             })),
             Container(
                 width: 1,
@@ -977,8 +1005,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             Expanded(
                 child: _actionRow(Icons.cancel_outlined, 'Cancelar', scale,
                     onTap: () {
-              RouteService.instance
-                  .updateStatus(route.id, RouteStatus.cancelada);
+              _updateRouteStatus(route, RouteStatus.cancelada);
             })),
           ],
         );

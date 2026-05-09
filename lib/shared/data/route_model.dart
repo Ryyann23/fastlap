@@ -34,6 +34,7 @@ class AppRoute {
     required this.points,
     required this.status,
     this.vehicleId,
+    this.deliveryId,
     this.scheduledTime,
     DateTime? createdAt,
     this.completedAt,
@@ -44,6 +45,7 @@ class AppRoute {
   final List<RoutePoint> points; // de 2 a 5 pontos (A=início + até 4 destinos)
   RouteStatus status;
   final String? vehicleId;
+  String? deliveryId;
   DateTime? scheduledTime;
   final DateTime createdAt;
   DateTime? completedAt;

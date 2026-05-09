@@ -340,6 +340,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _avatarCircle(LocalAuthUser? user, {required double scale}) {
     final avatarBytes = _avatarBytes(user?.avatarBase64);
+    final avatarUrl = user?.avatarUrl;
+    final ImageProvider? avatarImage;
+    if (avatarBytes != null) {
+      avatarImage = MemoryImage(avatarBytes);
+    } else if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      avatarImage = NetworkImage(avatarUrl);
+    } else {
+      avatarImage = null;
+    }
 
     return Container(
       width: 144 * scale,
@@ -354,14 +363,14 @@ class _ProfilePageState extends State<ProfilePage> {
           color: const Color(0xFFE7E7E7),
           borderRadius: BorderRadius.circular(68),
           border: Border.all(color: const Color(0xFFD3D3D3), width: 1.2),
-          image: avatarBytes == null
+          image: avatarImage == null
               ? null
               : DecorationImage(
-                  image: MemoryImage(avatarBytes),
+                  image: avatarImage,
                   fit: BoxFit.cover,
                 ),
         ),
-        child: avatarBytes == null
+        child: avatarImage == null
             ? Icon(
                 Icons.account_circle,
                 size: 96 * scale,

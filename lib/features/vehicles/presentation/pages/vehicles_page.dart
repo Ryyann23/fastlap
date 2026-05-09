@@ -22,6 +22,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
   void initState() {
     super.initState();
     _vehicleService.addListener(_onVehiclesChanged);
+    _loadVehicles();
   }
 
   @override
@@ -32,6 +33,15 @@ class _VehiclesPageState extends State<VehiclesPage> {
 
   void _onVehiclesChanged() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _loadVehicles() async {
+    try {
+      await _vehicleService.loadVehicles();
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage(error.toString());
+    }
   }
 
   Future<void> _showVehicleForm({Vehicle? vehicle}) async {
@@ -45,10 +55,15 @@ class _VehiclesPageState extends State<VehiclesPage> {
 
     if (result == null) return;
 
-    if (vehicle == null) {
-      _vehicleService.addVehicle(result);
-    } else {
-      _vehicleService.updateVehicle(result);
+    try {
+      if (vehicle == null) {
+        await _vehicleService.addVehicle(result);
+      } else {
+        await _vehicleService.updateVehicle(result);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage(error.toString());
     }
   }
 
@@ -75,8 +90,18 @@ class _VehiclesPageState extends State<VehiclesPage> {
     );
 
     if (confirmed == true) {
-      _vehicleService.removeVehicle(vehicle.id);
+      try {
+        await _vehicleService.removeVehicle(vehicle.id);
+      } catch (error) {
+        if (!mounted) return;
+        _showMessage(error.toString());
+      }
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   double _getScale() {
@@ -176,7 +201,10 @@ class _VehiclesPageState extends State<VehiclesPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 16 * scale),
-                    if (_vehicleService.vehicles.isEmpty)
+                    if (_vehicleService.isLoading &&
+                        _vehicleService.vehicles.isEmpty)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_vehicleService.vehicles.isEmpty)
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

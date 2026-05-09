@@ -10,6 +10,7 @@ class AuthTextField extends StatelessWidget {
     this.keyboardType,
     this.scale = 1,
     this.obscureText = false,
+    this.readOnly = false,
   });
 
   final String label;
@@ -19,6 +20,7 @@ class AuthTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final double scale;
   final bool obscureText;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +42,7 @@ class AuthTextField extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
+          readOnly: readOnly,
           style: TextStyle(
             fontSize: 15 * scale,
             color: isDark ? Colors.white : const Color(0xFF111111),

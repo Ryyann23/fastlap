@@ -55,6 +55,38 @@ class Vehicle {
     )..isSelected = isSelected ?? this.isSelected;
   }
 
+  factory Vehicle.fromApi(Map<String, dynamic> map) {
+    final typeName = (map['type'] ?? '').toString().toLowerCase();
+    final type = VehicleType.values.firstWhere(
+      (item) => item.name == typeName,
+      orElse: () => VehicleType.carro,
+    );
+
+    return Vehicle(
+      id: (map['id'] ?? '').toString(),
+      name: (map['name'] ?? '').toString(),
+      type: type,
+      speedPerKm: _toDouble(map['speed']),
+      carryCapacity: _toDouble(map['capacity']),
+      weight: _toDouble(map['weight']),
+      isAvailable: true,
+      createdAt: DateTime.tryParse(
+            (map['created_at'] ?? map['createdAt'] ?? '').toString(),
+          ) ??
+          DateTime.now(),
+    )..isSelected = map['is_selected'] == true || map['isSelected'] == true;
+  }
+
+  Map<String, dynamic> toApi() {
+    return {
+      'name': name,
+      'type': type.name,
+      'speed': speedPerKm,
+      'capacity': carryCapacity,
+      'weight': weight,
+    };
+  }
+
   // Calcula o tempo estimado de viagem em minutos
   double calculateTravelTimeMinutes(double distanceKm) {
     if (speedPerKm <= 0) return 0;
@@ -65,5 +97,10 @@ class Vehicle {
   int calculateRequiredLoads(double weightNeeded) {
     if (carryCapacity <= 0) return 0;
     return (weightNeeded / carryCapacity).ceil();
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

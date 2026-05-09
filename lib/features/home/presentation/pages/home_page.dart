@@ -12,6 +12,7 @@ import '../../../vehicles/presentation/pages/vehicles_page.dart';
 import '../../../reports/presentation/pages/reports_page.dart';
 import '../../../../shared/data/route_model.dart';
 import '../../../../shared/data/route_service.dart';
+import '../../../../shared/data/vehicle_service.dart';
 import '../../../../shared/utils/app_responsive.dart';
 import '../../../../shared/widgets/fastlap_bottom_bar.dart';
 import '../../../../shared/widgets/theme_mode_button.dart';
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     RouteService.instance.addListener(_onChanged);
+    _loadBackendData();
   }
 
   @override
@@ -41,6 +43,17 @@ class _HomePageState extends State<HomePage> {
 
   void _onChanged() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _loadBackendData() async {
+    try {
+      await Future.wait([
+        VehicleService.instance.loadVehicles(),
+        RouteService.instance.loadRoutes(),
+      ]);
+    } catch (_) {
+      // As telas especificas mostram erros quando o usuario tenta interagir.
+    }
   }
 
   String _formatBrasiliaNow() {
