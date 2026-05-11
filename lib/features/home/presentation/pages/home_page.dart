@@ -302,7 +302,7 @@ class _HomePageState extends State<HomePage> {
                           final result =
                               await Navigator.of(context).push<dynamic>(
                             MaterialPageRoute(
-                                builder: (_) => const VehiclesPage()),
+                                builder: (_) => const RoutesPage()),
                           );
                           if (result != null && mounted) setState(() {});
                         },

@@ -8,6 +8,13 @@ class AuthService {
 
   final ApiClient _api = ApiClient.instance;
 
+  static void resetForTesting() {
+    _activeUser = null;
+    ApiClient.instance.clearTokens();
+    RouteService.instance.clear();
+    VehicleService.instance.clear();
+  }
+
   Future<LocalAuthUser?> getActiveUser() async {
     if (_activeUser != null) return _activeUser;
     if (!_api.hasSession) return null;

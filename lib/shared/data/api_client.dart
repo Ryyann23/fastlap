@@ -22,6 +22,9 @@ class ApiClient {
     defaultValue: 'http://localhost:3000',
   );
 
+  http.Client? _defaultClient;
+  http.Client? _clientOverride;
+
   String? _accessToken;
   String? _refreshToken;
 
@@ -35,6 +38,16 @@ class ApiClient {
   void clearTokens() {
     _accessToken = null;
     _refreshToken = null;
+  }
+
+  void setClientForTesting(http.Client client) {
+    _clientOverride = client;
+  }
+
+  void resetClientForTesting() {
+    _clientOverride?.close();
+    _clientOverride = null;
+    clearTokens();
   }
 
   Future<dynamic> get(String path, {bool auth = true}) {
@@ -96,6 +109,7 @@ class ApiClient {
     required bool auth,
   }) {
     final uri = Uri.parse('$baseUrl$path');
+    final client = _clientOverride ?? (_defaultClient ??= http.Client());
     final headers = <String, String>{
       'Content-Type': 'application/json',
       if (auth && _accessToken != null) 'Authorization': 'Bearer $_accessToken',
@@ -103,10 +117,10 @@ class ApiClient {
     final payload = body == null ? null : jsonEncode(body);
 
     return switch (method) {
-      'GET' => http.get(uri, headers: headers),
-      'POST' => http.post(uri, headers: headers, body: payload),
-      'PUT' => http.put(uri, headers: headers, body: payload),
-      'DELETE' => http.delete(uri, headers: headers),
+      'GET' => client.get(uri, headers: headers),
+      'POST' => client.post(uri, headers: headers, body: payload),
+      'PUT' => client.put(uri, headers: headers, body: payload),
+      'DELETE' => client.delete(uri, headers: headers),
       _ => throw ApiException('Metodo HTTP invalido: $method'),
     };
   }
