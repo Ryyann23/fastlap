@@ -1,18 +1,20 @@
 import 'package:flutter/foundation.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:uuid/uuid.dart';
 
-import 'api_client.dart';
 import 'audit_log_service.dart';
 import 'caxias_pois.dart';
+import 'local_app_store.dart';
 import 'route_model.dart';
 
-/// Servico singleton para gerenciar rotas do app usando o backend FastLap.
+/// Servico singleton para gerenciar rotas salvas localmente no app.
 class RouteService extends ChangeNotifier {
   RouteService._();
   static final RouteService _instance = RouteService._();
   static RouteService get instance => _instance;
 
-  final ApiClient _api = ApiClient.instance;
+  static const Uuid _uuid = Uuid();
+
+  final LocalAppStore _store = LocalAppStore.instance;
   final List<AppRoute> _routes = [];
   bool _loaded = false;
   bool _loading = false;
@@ -55,36 +57,11 @@ class RouteService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final routesData = await _api.get('/api/routes');
-      if (routesData is! List) {
-        throw const ApiException('Resposta invalida ao listar rotas.');
-      }
-
-      final deliveriesByRoute = await _loadDeliveriesByRoute();
-      final loadedRoutes = <AppRoute>[];
-
-      for (final item in routesData.whereType<Map<String, dynamic>>()) {
-        final id = (item['id'] ?? '').toString();
-        Map<String, dynamic> routeData = item;
-
-        if (id.isNotEmpty) {
-          try {
-            final detail = await _api.get('/api/routes/$id');
-            if (detail is Map<String, dynamic>) {
-              routeData = detail;
-            }
-          } catch (_) {
-            routeData = item;
-          }
-        }
-
-        loadedRoutes.add(
-          _routeFromApi(
-            routeData,
-            delivery: deliveriesByRoute[id],
-          ),
-        );
-      }
+      final loadedRoutes = (await _store.getUserCollection('routesByUser'))
+          .map(AppRoute.fromMap)
+          .where((route) => route.points.length >= 2)
+          .toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       _routes
         ..clear()
@@ -96,39 +73,16 @@ class RouteService extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, Map<String, dynamic>>> _loadDeliveriesByRoute() async {
-    try {
-      final data = await _api.get('/api/stats/history?limit=200');
-      if (data is! List) return {};
-
-      final byRoute = <String, Map<String, dynamic>>{};
-      for (final item in data.whereType<Map<String, dynamic>>()) {
-        final routeId = item['route_id']?.toString();
-        if (routeId == null || routeId.isEmpty) continue;
-
-        final existing = byRoute[routeId];
-        if (existing == null ||
-            _deliveryDate(item).isAfter(_deliveryDate(existing))) {
-          byRoute[routeId] = item;
-        }
-      }
-      return byRoute;
-    } catch (_) {
-      return {};
-    }
-  }
-
-  /// Cria uma nova rota no backend.
-  /// Nota: o app ainda calcula automaticamente o status visual:
-  /// - se existe rota ativa ou pausada, a nova rota aparece como agendada;
-  /// - caso contrario, aparece como ativa.
-  /// O backend atual persiste esse estado como entrega "in_progress".
+  /// Cria uma nova rota local.
+  /// Se ja existe rota ativa ou pausada, a nova rota entra como agendada.
   Future<AppRoute> createRoute({
     required String name,
     required List<RoutePoint> selectedPoints,
     String? vehicleId,
     DateTime? scheduledTime,
   }) async {
+    await loadRoutes();
+
     final hasActiveOrPausedRoute = _routes.any(
       (r) => r.status == RouteStatus.ativa || r.status == RouteStatus.pausada,
     );
@@ -136,70 +90,23 @@ class RouteService extends ChangeNotifier {
         hasActiveOrPausedRoute ? RouteStatus.agendada : RouteStatus.ativa;
 
     final labeledPoints = _labeledPoints(selectedPoints);
-    final draftRoute = AppRoute(
-      id: 'draft',
+    final route = AppRoute(
+      id: _uuid.v4(),
       name: name,
       points: labeledPoints,
       status: statusForNewRoute,
       vehicleId: vehicleId,
+      deliveryId: _uuid.v4(),
       scheduledTime: scheduledTime,
-    );
-
-    final start = labeledPoints.first;
-    final end = labeledPoints.last;
-    final distance = draftRoute.totalDistanceKm;
-    final duration = _estimatedMinutesFor(draftRoute);
-
-    final data = await _api.post(
-      '/api/routes',
-      body: {
-        'name': name,
-        'vehicleId': vehicleId,
-        'startAddress': start.name,
-        'endAddress': end.name,
-        'distance': distance,
-        'estimatedTime': duration,
-        'startLat': start.latLng.latitude,
-        'startLng': start.latLng.longitude,
-        'endLat': end.latLng.latitude,
-        'endLng': end.latLng.longitude,
-      },
-    );
-
-    final routeData = data is Map<String, dynamic> ? data['route'] : null;
-    if (routeData is! Map<String, dynamic>) {
-      throw const ApiException('Resposta invalida ao criar rota.');
-    }
-
-    final routeId = (routeData['id'] ?? '').toString();
-    if (routeId.isEmpty) {
-      throw const ApiException('Backend nao retornou o ID da rota.');
-    }
-
-    await _saveRoutePois(routeId, labeledPoints.skip(1).toList());
-    final deliveryId = await _createDeliveryFor(
-      routeId: routeId,
-      status: _deliveryStatusFor(statusForNewRoute),
-      distance: distance,
-      duration: duration,
-    );
-
-    final route = AppRoute(
-      id: routeId,
-      name: (routeData['name'] ?? name).toString(),
-      points: labeledPoints,
-      status: statusForNewRoute,
-      vehicleId: routeData['vehicle_id']?.toString() ?? vehicleId,
-      deliveryId: deliveryId,
-      scheduledTime: scheduledTime,
-      createdAt: _parseDate(routeData['created_at']) ?? DateTime.now(),
+      createdAt: DateTime.now(),
     );
 
     _routes.insert(0, route);
+    await _saveRoutes();
     notifyListeners();
 
     final isScheduled = statusForNewRoute == RouteStatus.agendada;
-    AuditLogService.instance.addEntry(
+    await AuditLogService.instance.addEntry(
       action: isScheduled
           ? AuditActionType.scheduleRoute
           : AuditActionType.createRoute,
@@ -211,6 +118,7 @@ class RouteService extends ChangeNotifier {
       metadata: {
         'status': route.status.name,
         'distanceKm': route.totalDistanceKm,
+        'durationMinutes': _estimatedMinutesFor(route),
         'points': route.points.map((p) => p.label).toList(),
         'scheduledTime': route.scheduledTime?.toIso8601String(),
       },
@@ -219,60 +127,14 @@ class RouteService extends ChangeNotifier {
     return route;
   }
 
-  Future<void> _saveRoutePois(
-    String routeId,
-    List<RoutePoint> destinationPoints,
-  ) async {
-    for (var i = 0; i < destinationPoints.length; i++) {
-      final point = destinationPoints[i];
-      final poiData = await _api.post(
-        '/api/pois',
-        body: {
-          'name': point.name,
-          'category': 'delivery',
-          'address': point.name,
-          'latitude': point.latLng.latitude,
-          'longitude': point.latLng.longitude,
-          'notes': 'Criado pelo app FastLap',
-        },
-      );
-
-      final poi = poiData is Map<String, dynamic> ? poiData['poi'] : null;
-      final poiId = poi is Map<String, dynamic> ? poi['id']?.toString() : null;
-      if (poiId == null || poiId.isEmpty) {
-        throw const ApiException('Resposta invalida ao criar ponto da rota.');
-      }
-
-      await _api.post(
-        '/api/routes/$routeId/pois',
-        body: {
-          'poiId': poiId,
-          'orderIndex': i,
-        },
-      );
-    }
-  }
-
   /// Muda status de uma rota.
   Future<void> updateStatus(String routeId, RouteStatus newStatus) async {
+    await loadRoutes();
+
     final route = _routes.firstWhere((r) => r.id == routeId);
     final previousStatus = route.status;
-    final deliveryStatus = _deliveryStatusFor(newStatus);
 
-    if (route.deliveryId == null || route.deliveryId!.isEmpty) {
-      route.deliveryId = await _createDeliveryFor(
-        routeId: route.id,
-        status: deliveryStatus,
-        distance: route.totalDistanceKm,
-        duration: _estimatedMinutesFor(route),
-      );
-    } else {
-      await _api.put(
-        '/api/stats/deliveries/${route.deliveryId}',
-        body: {'status': deliveryStatus},
-      );
-    }
-
+    route.deliveryId ??= _uuid.v4();
     route.status = newStatus;
     if (newStatus == RouteStatus.concluida ||
         newStatus == RouteStatus.cancelada) {
@@ -280,6 +142,8 @@ class RouteService extends ChangeNotifier {
     } else {
       route.completedAt = null;
     }
+
+    await _saveRoutes();
     notifyListeners();
 
     AuditActionType action = AuditActionType.updateRoute;
@@ -296,7 +160,7 @@ class RouteService extends ChangeNotifier {
       description = 'Rota cancelada: ${route.name}';
     }
 
-    AuditLogService.instance.addEntry(
+    await AuditLogService.instance.addEntry(
       action: action,
       description: description,
       entityType: 'route',
@@ -310,16 +174,17 @@ class RouteService extends ChangeNotifier {
 
   /// Remove uma rota.
   Future<void> removeRoute(String routeId) async {
+    await loadRoutes();
+
     final routeIndex = _routes.indexWhere((r) => r.id == routeId);
     if (routeIndex == -1) return;
     final route = _routes[routeIndex];
 
-    await _api.delete('/api/routes/$routeId');
-
     _routes.removeAt(routeIndex);
+    await _saveRoutes();
     notifyListeners();
 
-    AuditLogService.instance.addEntry(
+    await AuditLogService.instance.addEntry(
       action: AuditActionType.deleteRoute,
       description: 'Rota removida: ${route.name}',
       entityType: 'route',
@@ -374,118 +239,6 @@ class RouteService extends ChangeNotifier {
     return labeledPoints;
   }
 
-  AppRoute _routeFromApi(
-    Map<String, dynamic> map, {
-    Map<String, dynamic>? delivery,
-  }) {
-    final id = (map['id'] ?? '').toString();
-    final points = <RoutePoint>[
-      RoutePoint(
-        id: '$id-start',
-        name: (map['start_address'] ?? CaxiasPOI.startPoint.name).toString(),
-        latLng: _latLngFrom(
-          map['start_lat'],
-          map['start_lng'],
-          fallback: CaxiasPOI.startPoint.latLng,
-        ),
-        label: 'A',
-      ),
-    ];
-
-    final pois = map['pois'];
-    if (pois is List && pois.isNotEmpty) {
-      final orderedPois = pois.whereType<Map<String, dynamic>>().toList()
-        ..sort((a, b) => _toInt(a['order_index']).compareTo(
-              _toInt(b['order_index']),
-            ));
-
-      final labels = ['B', 'C', 'D', 'E'];
-      for (var i = 0; i < orderedPois.length && i < labels.length; i++) {
-        final poi = orderedPois[i];
-        points.add(
-          RoutePoint(
-            id: (poi['id'] ?? '$id-poi-$i').toString(),
-            name: (poi['name'] ?? '').toString(),
-            latLng: _latLngFrom(
-              poi['latitude'],
-              poi['longitude'],
-              fallback: points.first.latLng,
-            ),
-            label: labels[i],
-          ),
-        );
-      }
-    }
-
-    if (points.length == 1) {
-      points.add(
-        RoutePoint(
-          id: '$id-end',
-          name: (map['end_address'] ?? 'Destino').toString(),
-          latLng: _latLngFrom(
-            map['end_lat'],
-            map['end_lng'],
-            fallback: points.first.latLng,
-          ),
-          label: 'B',
-        ),
-      );
-    }
-
-    return AppRoute(
-      id: id,
-      name: (map['name'] ?? 'Rota').toString(),
-      points: points,
-      status: _routeStatusFromDelivery(delivery),
-      vehicleId: map['vehicle_id']?.toString(),
-      deliveryId: delivery?['id']?.toString(),
-      createdAt: _parseDate(map['created_at']) ?? DateTime.now(),
-      completedAt: _parseDate(delivery?['completed_at']),
-    );
-  }
-
-  Future<String?> _createDeliveryFor({
-    required String routeId,
-    required String status,
-    required double distance,
-    required int duration,
-  }) async {
-    final data = await _api.post(
-      '/api/stats/deliveries',
-      body: {
-        'routeId': routeId,
-        'status': status,
-        'distance': distance,
-        'duration': duration,
-      },
-    );
-
-    final delivery = data is Map<String, dynamic> ? data['delivery'] : null;
-    return delivery is Map<String, dynamic> ? delivery['id']?.toString() : null;
-  }
-
-  String _deliveryStatusFor(RouteStatus status) {
-    switch (status) {
-      case RouteStatus.concluida:
-        return 'completed';
-      case RouteStatus.cancelada:
-        return 'cancelled';
-      case RouteStatus.ativa:
-      case RouteStatus.pausada:
-      case RouteStatus.agendada:
-        return 'in_progress';
-    }
-  }
-
-  RouteStatus _routeStatusFromDelivery(Map<String, dynamic>? delivery) {
-    final status = delivery?['status']?.toString();
-    return switch (status) {
-      'completed' => RouteStatus.concluida,
-      'cancelled' => RouteStatus.cancelada,
-      _ => RouteStatus.ativa,
-    };
-  }
-
   int _estimatedMinutesFor(AppRoute route) {
     final vehicle = route.vehicle;
     final minutes = vehicle != null
@@ -494,31 +247,10 @@ class RouteService extends ChangeNotifier {
     return minutes.clamp(1, 24 * 60).round();
   }
 
-  LatLng _latLngFrom(dynamic lat, dynamic lng, {required LatLng fallback}) {
-    final latitude = _toDoubleOrNull(lat);
-    final longitude = _toDoubleOrNull(lng);
-    if (latitude == null || longitude == null) return fallback;
-    return LatLng(latitude, longitude);
-  }
-
-  double? _toDoubleOrNull(dynamic value) {
-    if (value is num) return value.toDouble();
-    return double.tryParse(value?.toString() ?? '');
-  }
-
-  int _toInt(dynamic value) {
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
-  }
-
-  DateTime? _parseDate(dynamic value) {
-    if (value == null) return null;
-    return DateTime.tryParse(value.toString());
-  }
-
-  DateTime _deliveryDate(Map<String, dynamic> delivery) {
-    return _parseDate(delivery['completed_at']) ??
-        _parseDate(delivery['created_at']) ??
-        DateTime.fromMillisecondsSinceEpoch(0);
+  Future<void> _saveRoutes() async {
+    await _store.saveUserCollection(
+      'routesByUser',
+      _routes.map((route) => route.toMap()).toList(),
+    );
   }
 }

@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     RouteService.instance.addListener(_onChanged);
-    _loadBackendData();
+    _loadLocalData();
   }
 
   @override
@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _loadBackendData() async {
+  Future<void> _loadLocalData() async {
     try {
       await Future.wait([
         VehicleService.instance.loadVehicles(),

@@ -109,8 +109,7 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Apagar perfil'),
-        content:
-            const Text('Essa acao remove sua conta do backend. Continuar?'),
+        content: const Text('Essa acao remove sua conta deste app. Continuar?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),

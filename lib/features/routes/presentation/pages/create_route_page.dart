@@ -43,7 +43,7 @@ class _CreateRoutePageState extends State<CreateRoutePage> {
     try {
       await VehicleService.instance.loadVehicles();
     } catch (_) {
-      // A tela mostra a lista vazia se o backend nao estiver disponivel.
+      // A tela mostra a lista vazia se os dados locais nao forem carregados.
     }
   }
 

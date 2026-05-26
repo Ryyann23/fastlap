@@ -33,8 +33,8 @@ void main() {
       expect(vehicle.calculateRequiredLoads(45), 3);
     });
 
-    test('converte dados da API para modelo do app', () {
-      final vehicle = Vehicle.fromApi({
+    test('converte dados locais para modelo do app', () {
+      final vehicle = Vehicle.fromMap({
         'id': 'v1',
         'name': 'Van',
         'type': 'carro',

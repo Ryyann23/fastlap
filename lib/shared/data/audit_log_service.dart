@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'local_app_store.dart';
+
 enum AuditActionType {
   login,
   logout,
@@ -76,15 +78,29 @@ class AuditLogService extends ChangeNotifier {
 
   static final AuditLogService instance = AuditLogService._();
 
+  final LocalAppStore _store = LocalAppStore.instance;
   final List<AuditLogEntry> _entries = [];
   bool _loaded = false;
+  String? _loadedUserId;
 
   List<AuditLogEntry> get entries => List.unmodifiable(_entries);
 
   Future<void> ensureLoaded() async {
-    if (_loaded) return;
+    final activeUserId = await _store.getActiveUserId();
+    if (_loaded && _loadedUserId == activeUserId) return;
+
+    _entries
+      ..clear()
+      ..addAll(
+        (await _store.getUserCollection(
+          'auditLogsByUser',
+          userId: activeUserId,
+        ))
+            .map(AuditLogEntry.fromMap),
+      );
     _entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     _loaded = true;
+    _loadedUserId = activeUserId;
     notifyListeners();
   }
 
@@ -110,6 +126,21 @@ class AuditLogService extends ChangeNotifier {
     );
 
     _entries.insert(0, entry);
+    final activeUserId = await _store.getActiveUserId();
+    if (activeUserId != null) {
+      await _store.saveUserCollection(
+        'auditLogsByUser',
+        _entries.map((item) => item.toMap()).toList(),
+        userId: activeUserId,
+      );
+    }
+    notifyListeners();
+  }
+
+  void clear() {
+    _entries.clear();
+    _loaded = false;
+    _loadedUserId = null;
     notifyListeners();
   }
 }

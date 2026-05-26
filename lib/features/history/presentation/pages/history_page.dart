@@ -44,7 +44,7 @@ class _HistoryPageState extends State<HistoryPage> {
     try {
       await RouteService.instance.loadRoutes();
     } catch (_) {
-      // A tela permanece vazia se o backend nao estiver disponivel.
+      // A tela permanece vazia se os dados locais nao puderem ser carregados.
     }
   }
 

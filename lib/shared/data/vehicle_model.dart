@@ -55,7 +55,7 @@ class Vehicle {
     )..isSelected = isSelected ?? this.isSelected;
   }
 
-  factory Vehicle.fromApi(Map<String, dynamic> map) {
+  factory Vehicle.fromMap(Map<String, dynamic> map) {
     final typeName = (map['type'] ?? '').toString().toLowerCase();
     final type = VehicleType.values.firstWhere(
       (item) => item.name == typeName,
@@ -66,10 +66,12 @@ class Vehicle {
       id: (map['id'] ?? '').toString(),
       name: (map['name'] ?? '').toString(),
       type: type,
-      speedPerKm: _toDouble(map['speed']),
-      carryCapacity: _toDouble(map['capacity']),
+      speedPerKm: _toDouble(map['speedPerKm'] ?? map['speed']),
+      carryCapacity: _toDouble(map['carryCapacity'] ?? map['capacity']),
       weight: _toDouble(map['weight']),
-      isAvailable: true,
+      isAvailable: map['isAvailable'] is bool
+          ? map['isAvailable'] as bool
+          : (map['is_available'] is bool ? map['is_available'] as bool : true),
       createdAt: DateTime.tryParse(
             (map['created_at'] ?? map['createdAt'] ?? '').toString(),
           ) ??
@@ -77,13 +79,17 @@ class Vehicle {
     )..isSelected = map['is_selected'] == true || map['isSelected'] == true;
   }
 
-  Map<String, dynamic> toApi() {
+  Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'type': type.name,
-      'speed': speedPerKm,
-      'capacity': carryCapacity,
+      'speedPerKm': speedPerKm,
+      'carryCapacity': carryCapacity,
       'weight': weight,
+      'isAvailable': isAvailable,
+      'isSelected': isSelected,
+      'createdAt': createdAt.toIso8601String(),
     };
   }
 
